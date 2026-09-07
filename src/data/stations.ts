@@ -1,3 +1,5 @@
+import source from '../../data/stations.json';
+
 export type ChargerType = 'AC' | 'DC';
 export type StationAccess = 'Halka açık' | 'Özel erişim';
 
@@ -20,4 +22,3 @@ export interface Station {
 
 export const dataset = source.meta;
 export const stations = source.stations as Station[];
-import source from '../../data/stations.sample.json';

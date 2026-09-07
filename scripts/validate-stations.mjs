@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
-const sourcePath = new URL('../data/stations.sample.json', import.meta.url);
+const sourcePath = new URL('../data/stations.json', import.meta.url);
 const source = JSON.parse(await readFile(sourcePath, 'utf8'));
 const failures = [];
 const ids = new Set();

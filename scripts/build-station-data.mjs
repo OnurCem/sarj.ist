@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const source = JSON.parse(await readFile(resolve(projectRoot, 'data/stations.sample.json'), 'utf8'));
+const source = JSON.parse(await readFile(resolve(projectRoot, 'data/stations.json'), 'utf8'));
 const outputRoot = resolve(projectRoot, 'public/data');
 const regionsRoot = resolve(outputRoot, 'regions');
 const grouped = Map.groupBy(source.stations, ({ citySlug }) => citySlug);

@@ -7,6 +7,8 @@
     "dev": "npm run prepare:data && astro dev --host 127.0.0.1",
     "validate:data": "node scripts/validate-stations.mjs",
     "prepare:data": "node scripts/build-station-data.mjs",
+    "import:epdk": "node scripts/import-epdk.mjs",
+    "test": "node --test",
     "build": "npm run validate:data && npm run prepare:data && astro build",
     "preview": "astro preview --host 127.0.0.1"
   },

@@ -29,6 +29,8 @@ The interface is static Astro HTML with a small client-side Leaflet controller. 
 
 `npm run prepare:data` converts the normalized source into a compact manifest and one JSON bundle per city under `public/data/`. The map loads only the İstanbul bundle; generated bundles are ignored by Git and rebuilt deterministically for development and production builds.
 
+`npm run import:epdk -- --input path/to/response.json` normalizes an authorized saved EPDK response and protects the last accepted dataset with count, validity, station-removal, and socket-removal gates. See [`docs/data-pipeline.md`](docs/data-pipeline.md) for the contract and production prerequisites.
+
 ## Validation
 
 Production build, map filtering, generated route navigation, desktop rendering, and 390 px mobile layouts are checked. Optional WebMCP support is feature-detected.
