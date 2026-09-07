@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import { dataset, stations, type Station } from '../../data/stations';
+
+export function getStaticPaths() {
+  const cities = [...new Map(stations.map((station) => [station.citySlug, station.city])).entries()];
+  return cities.map(([citySlug, city]) => ({ params: { city: citySlug }, props: { city, citySlug } }));
+}
+
+interface Props { city: string; citySlug: string }
+const { city, citySlug } = Astro.props;
+const cityStations: Station[] = stations.filter((station) => station.citySlug === citySlug);
+---
+<BaseLayout title={`${city} elektrikli araç şarj istasyonları | şarj.ist`} description={`${city} elektrikli araç şarj istasyonlarını operatör, güç ve soket bilgileriyle incele.`} canonicalPath={`/sehir/${citySlug}/`}>
+  <SiteHeader current="city" />
+  <main class="content-page city-page">
+    <a class="back-link" href="/">← Haritaya dön</a>
+    <header class="city-heading">
+      <h1>{city} şarj istasyonları</h1>
+      <p>{cityStations.length} örnek nokta · Anlık müsaitlik gösterilmez.</p>
+    </header>
+    <div class="city-station-list">
+      {cityStations.map((station) => (
+        <a class="city-station-row" href={`/istasyon/${station.slug}/`}>
+          <span class="operator-mark">{station.operator.toLocaleLowerCase('tr')}</span>
+          <span class="city-station-copy"><strong>{station.name}</strong><small>{station.area}</small></span>
+          <span class="city-station-power"><strong>{station.type} {station.power} kW</strong><small>{station.sockets} soket</small></span>
+          <span aria-hidden="true">→</span>
+        </a>
+      ))}
+    </div>
+    <div class="sample-warning"><strong>{dataset.label}</strong><p>EPDK veri bağlantısı kurulana kadar bu kayıtlar arayüz geliştirmesi içindir.</p></div>
+  </main>
+</BaseLayout>

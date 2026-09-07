@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import { dataset, stations, type Station } from '../../data/stations';
+
+export function getStaticPaths() {
+  return stations.map((station) => ({ params: { slug: station.slug }, props: { station } }));
+}
+
+interface Props { station: Station }
+const { station } = Astro.props;
+const description = `${station.area} bölgesindeki ${station.operator} ${station.type} şarj noktası: ${station.power} kW azami güç ve ${station.sockets} soket.`;
+---
+<BaseLayout title={`${station.name} | şarj.ist`} description={description} canonicalPath={`/istasyon/${station.slug}/`}>
+  <SiteHeader current="station" />
+  <main class="content-page">
+    <a class="back-link" href="/">← Haritaya dön</a>
+    <article class="station-page">
+      <div class="page-heading">
+        <span class="operator-mark">{station.operator.toLocaleLowerCase('tr')}</span>
+        <div>
+          <p class="page-kicker">{station.operator} · {station.access}</p>
+          <h1>{station.name}</h1>
+          <p>{station.area}, {station.city}</p>
+        </div>
+      </div>
+      <dl class="station-facts">
+        <div><dt>Şarj türü</dt><dd>{station.type === 'DC' ? 'DC CCS' : 'AC Tip 2'}</dd></div>
+        <div><dt>Azami güç</dt><dd>{station.power} kW</dd></div>
+        <div><dt>Soket sayısı</dt><dd>{station.sockets} soket</dd></div>
+        <div><dt>Erişim</dt><dd>{station.access}</dd></div>
+      </dl>
+      <div class="sample-warning"><strong>{dataset.label}</strong><p>Bu sayfadaki istasyon bilgileri yalnızca arayüz geliştirmesi içindir. Anlık müsaitlik gösterilmez ve seyahat planlamak için kullanılmamalıdır.</p></div>
+      <a class="primary page-action" href={`/sehir/${station.citySlug}/`}>{station.city} şarj istasyonlarını incele</a>
+    </article>
+  </main>
+</BaseLayout>

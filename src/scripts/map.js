@@ -1,19 +1,9 @@
 import L from 'leaflet';
+import { stations } from '../data/stations';
 
-// Illustrative fixtures only. These are not EPDK station records.
-const stations = [
-  { id: 1, name: 'Kanyon · Şarj noktası', area: 'Levent, Beşiktaş', operator: 'Zes', type: 'DC', power: 180, sockets: 4, lat: 41.078, lng: 29.01, access: 'Halka açık' },
-  { id: 2, name: 'Zorlu Center · Şarj noktası', area: 'Levazım, Beşiktaş', operator: 'Eşarj', type: 'DC', power: 120, sockets: 2, lat: 41.067, lng: 29.017, access: 'Halka açık' },
-  { id: 3, name: 'İstinye · Şarj noktası', area: 'Pınar, Sarıyer', operator: 'Trugo', type: 'DC', power: 180, sockets: 4, lat: 41.108, lng: 29.031, access: 'Halka açık' },
-  { id: 4, name: 'Bebek · Şarj noktası', area: 'Bebek, Beşiktaş', operator: 'Voltrun', type: 'AC', power: 22, sockets: 2, lat: 41.077, lng: 29.043, access: 'Halka açık' },
-  { id: 5, name: 'Nişantaşı · Şarj noktası', area: 'Teşvikiye, Şişli', operator: 'Zes', type: 'AC', power: 22, sockets: 2, lat: 41.051, lng: 28.994, access: 'Halka açık' },
-  { id: 6, name: 'Üsküdar · Şarj noktası', area: 'Altunizade, Üsküdar', operator: 'Trugo', type: 'DC', power: 180, sockets: 4, lat: 41.027, lng: 29.044, access: 'Halka açık' },
-  { id: 7, name: 'Maslak · Şarj noktası', area: 'Maslak, Sarıyer', operator: 'Eşarj', type: 'DC', power: 120, sockets: 2, lat: 41.115, lng: 29.015, access: 'Halka açık' },
-  { id: 8, name: 'Emirgan · Şarj noktası', area: 'Emirgan, Sarıyer', operator: 'Voltrun', type: 'AC', power: 22, sockets: 2, lat: 41.105, lng: 29.053, access: 'Özel erişim' },
-];
 const $ = (s) => document.querySelector(s);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
-let selected = 1;
+let selected = stations[0]?.id ?? null;
 let type = 'all';
 let visible = [];
 let detailOpen = !window.matchMedia('(max-width:760px)').matches;
@@ -68,7 +58,7 @@ function render() {
   if (!visible.some((s) => s.id === selected)) { selected = null; detailOpen = false; }
   $('#result-count').textContent = `${visible.length} istasyon`;
   $('#station-list').innerHTML = visible.length ? visible.map(card).join('') : '<div class="empty">Bu filtrelere uygun istasyon bulunamadı.<br/>Başka bir arama yapabilir veya filtreleri temizleyebilirsin.<br/><button id="clear-filters">Filtreleri temizle</button></div>';
-  document.querySelectorAll('.station-card').forEach((button) => button.addEventListener('click', () => selectStation(Number(button.dataset.id))));
+  document.querySelectorAll('.station-card').forEach((button) => button.addEventListener('click', () => selectStation(button.dataset.id)));
   $('#clear-filters')?.addEventListener('click', resetFilters);
   markers.forEach((m) => map.removeLayer(m));
   markers.clear();

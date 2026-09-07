@@ -1,21 +1,7 @@
 ---
-import '../styles/global.css';
-import '../styles/volt-dark.css';
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-<!doctype html>
-<html lang="tr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#131612" />
-    <title>şarj.ist — Şarjını bul. Yoluna bak.</title>
-    <meta name="description" content="Türkiye'deki elektrikli araç şarj istasyonlarını keşfet. Harita, soket ve operatör filtreleriyle şarj durağını bul. Etkileşimli tasarım prototipi." />
-    <link rel="icon" type="image/svg+xml" href="/brand/mark.svg?v=3" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;650;700&family=Manrope:wght@400;500;600;650;700;750;800&display=swap" rel="stylesheet" />
-  </head>
-  <body>
+<BaseLayout title="şarj.ist — Şarjını bul. Yoluna bak." description="Türkiye'deki elektrikli araç şarj istasyonlarını keşfet. Harita, soket ve operatör filtreleriyle şarj durağını bul.">
     <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <symbol id="socket" viewBox="0 0 24 24"><path d="M7 3h10l4 6-3 11H6L3 9Z"/><circle cx="9" cy="8" r="1"/><circle cx="15" cy="8" r="1"/><circle cx="8" cy="13" r="1"/><circle cx="16" cy="13" r="1"/><circle cx="12" cy="16" r="1"/></symbol><symbol id="plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol><symbol id="minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></symbol>
       <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
@@ -60,5 +46,4 @@ import '../styles/volt-dark.css';
     </main>
     <dialog id="about-dialog"><button class="dialog-close" aria-label="Kapat"><svg><use href="#close"/></svg></button><img src="/brand/mark.svg?v=3" width="54" height="54" alt=""/><h2>Şarj durağını bul.<br/>Yoluna devam et.</h2><p>İstasyonları haritada keşfet, AC veya DC şarj türüne göre filtrele ve bir istasyon seçerek detaylarını gör.</p><p>Bu bir tasarım prototipidir. İstasyon adları, konumları ve soket bilgileri örnektir; seyahat planlamak için kullanılmamalıdır. EPDK veri bağlantısı henüz kurulmadı.</p><button class="primary dialog-done">Keşfetmeye başla <svg><use href="#arrow"/></svg></button></dialog>
     <script src="../scripts/map.js"></script>
-  </body>
-</html>
+</BaseLayout>

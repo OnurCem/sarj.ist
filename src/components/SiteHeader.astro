@@ -1,0 +1,12 @@
+---
+interface Props { current?: 'map' | 'city' | 'station' }
+const { current } = Astro.props;
+---
+<header class="topbar">
+  <a class="brand" href="/" aria-label="şarj.ist ana sayfa"><img src="/brand/mark.svg?v=3" width="39" height="39" alt=""/><span>şarj<span class="brand-light">.ist</span></span></a>
+  <nav aria-label="Ana menü">
+    <a class:list={[current === 'map' && 'nav-current']} href="/">İstasyonları keşfet</a>
+    <a class:list={[current === 'city' && 'nav-current']} href="/sehir/istanbul/">Şehir rehberi</a>
+  </nav>
+  <div class="header-right"><span class="demo-badge">Tasarım önizlemesi</span></div>
+</header>
