@@ -17,7 +17,7 @@ export function slugify(value) {
 export function extractRecords(payload) {
   if (Array.isArray(payload)) return { records: payload, declaredCount: payload.length };
   if (!payload || typeof payload !== 'object') throw new Error('EPDK payload must be an object or array');
-  const declaredCount = number(first(payload.totalCount, payload.total, payload.recordCount, payload.kayitSayisi));
+  const declaredCount = number(first(payload.totalCount, payload.total, payload.recordCount, payload.kayitSayisi, payload.numRows));
   for (const key of arrayKeys) {
     if (Array.isArray(payload[key])) return { records: payload[key], declaredCount };
     if (payload[key] && typeof payload[key] === 'object') {
@@ -31,11 +31,15 @@ export function extractRecords(payload) {
 }
 
 function connectorSummary(raw) {
-  const connectors = [raw.connectors, raw.sockets, raw.soketler, raw.sarjUnitesiListesi].find(Array.isArray) ?? [];
+  const connectorValue = first(raw.connectors, raw.sockets, raw.soketler, raw.sarjUnitesiListesi);
+  let connectors = Array.isArray(connectorValue) ? connectorValue : [];
+  if (typeof connectorValue === 'string' && connectorValue.trim().startsWith('[')) {
+    try { connectors = JSON.parse(connectorValue); } catch { /* Validation below will reject missing socket details. */ }
+  }
   const topType = first(raw.type, raw.chargerType, raw.sarjTipi, raw.soketTipi);
   const types = [topType, ...connectors.map((item) => first(item.type, item.chargerType, item.sarjTipi, item.soketTipi))]
     .filter(Boolean).map((value) => String(value).toLocaleUpperCase('tr'));
-  const powers = [first(raw.power, raw.maxPower, raw.guc, raw.maksimumGuc), ...connectors.map((item) => first(item.power, item.maxPower, item.guc, item.maksimumGuc))]
+  const powers = [first(raw.power, raw.maxPower, raw.guc, raw.maksimumGuc, raw.soketGucu), ...connectors.map((item) => first(item.power, item.maxPower, item.guc, item.maksimumGuc, item.soketGucu, item.soketGucuKw))]
     .map(number).filter(Number.isFinite);
   const explicitCount = number(first(raw.socketCount, raw.connectorCount, raw.soketSayisi));
   const connectorCount = connectors.reduce((total, item) => total + (number(first(item.count, item.adet, item.soketSayisi)) ?? 1), 0);
@@ -47,21 +51,23 @@ function connectorSummary(raw) {
 }
 
 function accessLabel(raw) {
-  const value = first(raw.publicAccess, raw.isPublic, raw.halkaAcik, raw.access, raw.accessType, raw.erisimTipi);
+  const value = first(raw.publicAccess, raw.isPublic, raw.halkaAcik, raw.access, raw.accessType, raw.erisimTipi, raw.hizmetSekli);
   if (typeof value === 'boolean') return value ? 'Halka açık' : 'Özel erişim';
   const normalized = String(value ?? '').toLocaleLowerCase('tr');
   return normalized.includes('özel') || normalized.includes('private') || normalized.includes('kapalı') ? 'Özel erişim' : 'Halka açık';
 }
 
 export function normalizeRecord(raw) {
-  const location = raw.location ?? raw.konum ?? {};
+  const addressObject = raw.adres && typeof raw.adres === 'object' ? raw.adres : {};
+  const location = raw.location ?? raw.konum ?? addressObject;
   const coordinates = Array.isArray(location.coordinates) ? location.coordinates : [];
-  const id = String(first(raw.id, raw.stationId, raw.chargeStationId, raw.istasyonId, raw.sarjIstasyonId, '')).trim();
+  const id = String(first(raw.id, raw.stationId, raw.chargeStationId, raw.istasyonId, raw.sarjIstasyonId, raw.sarjIstasyonuNo, '')).trim();
   const name = String(first(raw.name, raw.stationName, raw.istasyonAdi, raw.sarjIstasyonAdi, '')).trim();
-  const operator = String(first(raw.operatorName, raw.operator, raw.network, raw.firmaAdi, raw.lisansSahibi, '')).trim();
+  const operator = String(first(raw.operatorName, raw.operator, raw.network, raw.firmaAdi, raw.lisansSahibi, raw.sarjAgiIsletmecisiUnvan, raw.sarjIstasyonuIsletmecisi, raw.marka, '')).trim();
   const city = String(first(raw.city, raw.province, raw.il, raw.sehir, location.city, location.il, '')).trim();
   const district = String(first(raw.district, raw.ilce, location.district, location.ilce, '')).trim();
-  const area = String(first(raw.address, raw.adres, location.address, location.adres, district, '')).trim();
+  const flatAddress = typeof raw.adres === 'string' ? raw.adres : undefined;
+  const area = String(first(raw.address, flatAddress, location.fullAddress, location.acikAdres, location.address, location.adres, district, '')).trim();
   const lat = number(first(raw.lat, raw.latitude, raw.enlem, location.lat, location.latitude, location.enlem, coordinates[1]));
   const lng = number(first(raw.lng, raw.lon, raw.longitude, raw.boylam, location.lng, location.lon, location.longitude, location.boylam, coordinates[0]));
   const connector = connectorSummary(raw);

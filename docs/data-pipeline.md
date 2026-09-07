@@ -10,7 +10,15 @@ npm test
 npm run build
 ```
 
-The importer is deliberately offline: it accepts a response already obtained through an authorized channel and does not embed EPDK credentials, endpoints, or unverified reuse assumptions.
+The official fetcher calls `https://apigateway.epdk.gov.tr/sarjIstasyonlari/` with the service's required JSON-body `GET` request. The Swagger declares no security scheme. The service permits one request per hour, so the fetcher records an attempt before making the request, refuses another attempt inside that window, and never retries automatically.
+
+Run the complete fetch and guarded import with:
+
+```sh
+npm run sync:epdk
+```
+
+`EPDK_FILTER_JSON` may contain a JSON filter object when a scoped request is needed. `EPDK_STATIONS_URL` exists only for contract testing; production uses the official HTTPS URL. Raw responses and the local fetch-attempt state stay under the ignored `data/raw/` directory.
 
 ## Accepted envelope and field aliases
 
@@ -34,7 +42,8 @@ On success, writes use a temporary sibling followed by an atomic rename. The pri
 
 ## Still required before production
 
-- Confirm the exact EPDK response envelope and aliases against the supplied full snapshot.
-- Confirm authentication, rate limits, attribution, and data-reuse permission.
-- Add the authorized fetch step and secret names only after those details are known.
+- Confirm the address and socket sub-fields against a non-empty full response; the official Swagger documents the envelope and top-level column names but not nested response definitions.
+- Confirm attribution and data-reuse permission before publishing the fetched records.
 - Run the full 16,768-record performance validation described in the implementation plan.
+
+The scheduled GitHub workflow runs daily at 05:17 Europe/Istanbul time. It allows only one concurrent refresh, applies every quality gate, runs tests and the production build, then opens a reviewable pull request rather than writing directly to `main`.

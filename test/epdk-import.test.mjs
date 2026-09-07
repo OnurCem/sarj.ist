@@ -46,6 +46,31 @@ test('normalizes known Turkish and English EPDK field aliases', () => {
   assert.equal(dataset.stations[1].type, 'AC');
 });
 
+test('normalizes the official EPDK envelope and station field names', () => {
+  const payload = {
+    statusCode: 200,
+    statusDescription: 'OK',
+    numRows: 1,
+    errors: [],
+    result: [{
+      sarjIstasyonuNo: 'EPDK-42',
+      sarjIstasyonuAdi: 'Resmî İstasyon',
+      sarjAgiIsletmecisiUnvan: 'Şarj Ağı AŞ',
+      hizmetSekli: 'Halka Açık',
+      adres: { il: 'İstanbul', ilce: 'Kadıköy', acikAdres: 'Koşuyolu, Kadıköy' },
+      enlem: 41.01,
+      boylam: 29.04,
+      soketler: [{ soketTipi: 'DC', soketGucu: 120 }],
+    }],
+  };
+  const { dataset, report } = normalizeEpdkSnapshot(payload);
+  assert.equal(report.acceptedCount, 1);
+  assert.equal(dataset.stations[0].id, 'EPDK-42');
+  assert.equal(dataset.stations[0].operator, 'Şarj Ağı AŞ');
+  assert.equal(dataset.stations[0].area, 'Koşuyolu, Kadıköy');
+  assert.equal(dataset.stations[0].power, 120);
+});
+
 test('rejects an incomplete response envelope before normalization', () => {
   assert.throws(() => normalizeEpdkSnapshot({ totalCount: 3, items: rawStations }), /declares 3 records but contains 2/);
 });
