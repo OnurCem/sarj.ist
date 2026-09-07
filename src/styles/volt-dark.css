@@ -1,0 +1,72 @@
+/* Volt: dark surfaces with electric-yellow action accents. */
+:root {
+  color-scheme: dark;
+  --ink: #f1f4e9;
+  --muted: #b4bcaa;
+  --accent: #e3ff48;
+  --on-accent: #191d17;
+  --surface: #1b2019;
+  --raised: #252c21;
+  --selected: #303a22;
+  --line: #424c39;
+  --control-line: #748069;
+  --header: #131612;
+  color: var(--ink);
+  background: var(--header);
+}
+body,.workspace,.map-region,.leaflet-container { background: var(--header); color: var(--ink); }
+.topbar { background: var(--header); border-color: var(--line); }
+.brand,.brand-light { color: var(--ink); }
+.brand { position: relative; }
+.brand img { visibility: hidden; }
+.brand::before { content: ''; position: absolute; left: 0; width: 38px; height: 44px; background: var(--accent); mask: url('/brand/mark.svg?v=3') center / contain no-repeat; }
+.nav-current { color: var(--accent); border-color: var(--accent); }
+.topbar nav button,.header-right { color: var(--muted); }
+.topbar nav button:hover { color: var(--ink); }
+.sidebar,.detail-card,.data-note,dialog,.location-pill,.map-action,.map-controls,.map-legend,.map-error { background: var(--surface); color: var(--ink); border-color: var(--line); }
+.sidebar,.detail-card { box-shadow: 0 12px 40px #0005; }
+.search-section h1 { color: var(--ink); }
+.search-section>p,.results-heading>span,.station-area,.station-power>span,.detail-address,.detail-specs small,.data-note p,.detail-note,dialog p,.station-arrow,.close-detail,.empty { color: var(--muted); }
+.searchbox,.chip,select { background: var(--surface); color: var(--ink); border-color: var(--control-line); }
+.searchbox input { color: var(--ink); }
+.searchbox input::placeholder { color: var(--muted); }
+.searchbox:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px #e3ff4820; }
+.chip.active,.primary,.empty button,.mobile-toggle { background: var(--accent); color: var(--on-accent); border-color: var(--accent); box-shadow: none; }
+.chip:hover:not(.active),.filter-button[aria-expanded=true],.map-controls button:hover { background: var(--raised); color: var(--ink); }
+.primary:hover { background: #d0ed30; }
+.primary { font-size: 16px; }
+.results-heading,.detail-specs,.data-note,.map-controls button+button,.map-legend>span+span { border-color: var(--line); }
+.station-card { background: var(--surface); color: var(--ink); }
+.station-card:after { background: var(--line); }
+.station-card:hover { background: var(--raised); }
+.station-card.selected { background: var(--selected); border-left-color: var(--accent); }
+.station-list { scrollbar-color: var(--control-line) transparent; }
+.operator-mark,.operator-mark.eşarj,.operator-mark.trugo,.operator-mark.voltrun { background: var(--header); color: var(--accent); border-color: var(--line); box-shadow: none; }
+.station-power,.detail-specs svg,.detail-specs>div:nth-child(2) svg { color: var(--accent); }
+.station-power.ac { color: var(--ink); }
+.detail-access { background: var(--raised); color: var(--muted); }
+.map-controls button { background: var(--surface); color: var(--ink); }
+.map-action:hover { color: var(--accent); }
+.charger-pin { background: var(--accent); color: var(--on-accent); border-color: var(--header); box-shadow: 0 4px 10px #0005; }
+.charger-pin:after { border-color: var(--header); }
+.charger-pin.ac { background: #333c2e; color: var(--ink); border-color: #a7b19a; }
+.charger-pin.ac:after { border-color: #a7b19a; }
+.charger-pin.chosen { box-shadow: 0 0 0 10px #e3ff4825, 0 0 0 20px #e3ff4812, 0 4px 12px #0005; }
+.map-legend i { background: var(--accent); box-shadow: none; }
+.map-legend .ac-dot { background: #333c2e; box-shadow: 0 0 0 1px #a7b19a; }
+/* Tile colors are presentation-only; geographic data remains unchanged. */
+.leaflet-tile-pane { filter: grayscale(1) invert(1) contrast(1.2) brightness(.95); }
+.leaflet-control-attribution { background: #131612ed !important; color: var(--muted); }
+.leaflet-control-attribution a { color: var(--ink) !important; }
+.data-note p,.detail-note { font-size: 12px; }
+.station-area,.station-power>span,.detail-specs small { font-size: 13px; }
+.detail-specs strong { font-size: 15px; }
+.detail-access { font-size: 12px; }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+dialog::backdrop { background: #090c09aa; }
+@media(max-width:760px) {
+  .brand::before { width: 35px; height: 46px; }
+  .map-mode .mobile-toggle { background: var(--accent); color: var(--on-accent); box-shadow: 0 4px 20px #0006; }
+  .sidebar { box-shadow: none; }
+  .detail-access { font-size: 11px; }
+}
