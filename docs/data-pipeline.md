@@ -1,6 +1,6 @@
 # Station data ingestion
 
-The application reads its active normalized dataset from `data/stations.json`. The checked-in file contains design fixtures until a real, authorized EPDK export is supplied.
+The application reads its active normalized dataset from the ignored local file `data/stations.json`. EPDK station snapshots, import state, history, and raw responses must never be committed or pushed to GitHub. On a clean clone, the data preparation scripts copy the tracked design fixtures from `data/stations.sample.json` into the local active path.
 
 ## Import a saved response
 
@@ -38,12 +38,11 @@ Provider fields are isolated in `scripts/lib/epdk-adapter.mjs`. It currently cov
 
 Thresholds can be changed explicitly with `--min-count`, `--max-invalid-rate`, `--max-drop-rate`, and `--confirmation-runs`. A failed gate exits non-zero without changing the active dataset or reconciliation state.
 
-On success, writes use a temporary sibling followed by an atomic rename. The prior active dataset is saved to `data/history/stations.previous.json`, pending-removal evidence is saved to `data/import-state.json`, and `data/stations.json` becomes the new publishable snapshot.
+On success, writes use a temporary sibling followed by an atomic rename. The prior active dataset is saved to `data/history/stations.previous.json`, pending-removal evidence is saved to `data/import-state.json`, and `data/stations.json` becomes the new local publishable snapshot. All three paths are ignored by Git.
 
 ## Still required before production
 
-- Confirm the address and socket sub-fields against a non-empty full response; the official Swagger documents the envelope and top-level column names but not nested response definitions.
 - Confirm attribution and data-reuse permission before publishing the fetched records.
-- Run the full 16,768-record performance validation described in the implementation plan.
+- Choose a deployment-time data source that does not store the station snapshot in GitHub.
 
-The scheduled GitHub workflow runs daily at 05:17 Europe/Istanbul time. It allows only one concurrent refresh, applies every quality gate, runs tests and the production build, then opens a reviewable pull request rather than writing directly to `main`.
+The scheduled GitHub workflow runs daily at 05:17 Europe/Istanbul time. It allows only one concurrent refresh, applies every quality gate, and runs tests plus the production build with read-only repository permissions. Its fetched snapshot exists only for the duration of that runner and is not committed or uploaded as an artifact.

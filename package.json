@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "npm run prepare:data && astro dev --host 127.0.0.1",
-    "validate:data": "node scripts/validate-stations.mjs",
-    "prepare:data": "node scripts/build-station-data.mjs",
+    "validate:data": "node scripts/ensure-station-data.mjs && node scripts/validate-stations.mjs",
+    "prepare:data": "node scripts/ensure-station-data.mjs && node scripts/build-station-data.mjs",
     "fetch:epdk": "node scripts/fetch-epdk.mjs",
     "import:epdk": "node scripts/import-epdk.mjs",
     "sync:epdk": "npm run fetch:epdk && npm run import:epdk -- --input data/raw/epdk-latest.json",

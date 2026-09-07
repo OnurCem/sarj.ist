@@ -10,8 +10,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   refresh:
@@ -28,19 +27,3 @@ jobs:
         run: npm run sync:epdk
       - run: npm test
       - run: npm run build
-      - name: Create a reviewable data update
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git add data/stations.json data/import-state.json data/history/stations.previous.json
-          if git diff --cached --quiet; then
-            echo "No publishable data changes"
-            exit 0
-          fi
-          branch="automation/epdk-refresh-${GITHUB_RUN_ID}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$branch"
-          git commit -m "data: refresh EPDK station snapshot"
-          git push origin "$branch"
-          gh pr create --base main --head "$branch" --title "data: refresh EPDK station snapshot" --body "Automated EPDK refresh. Data quality gates, reconciliation tests, and the production build passed."
