@@ -45,6 +45,13 @@ test('rejects empty or incomplete service responses', () => {
   assert.throws(() => validateEpdkServiceResponse({ statusCode: 200, numRows: 2, result: [{}], errors: [] }), /does not match/);
 });
 
+test('accepts the production data envelope and detects schema drift', () => {
+  const columnNames = ['sarjIstasyonuNo', 'sarjIstasyonuAdi', 'sarjAgiIsletmecisiUnvan', 'adres', 'enlem', 'boylam', 'soketler', 'hizmetSekli'];
+  const payload = { statusCode: 200, numRows: 1, result: null, data: [{}], errors: [], columnNames };
+  assert.equal(validateEpdkServiceResponse(payload), payload);
+  assert.throws(() => validateEpdkServiceResponse({ ...payload, columnNames: columnNames.slice(1) }), /missing required columns: sarjIstasyonuNo/);
+});
+
 test('prevents a second EPDK request inside the one-hour window', () => {
   const lastAttemptAt = '2026-09-07T12:00:00.000Z';
   assert.throws(() => assertRequestInterval({ lastAttemptAt }, { now: Date.parse('2026-09-07T12:59:59.999Z') }), /one request per hour/);

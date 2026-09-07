@@ -1,10 +1,29 @@
 const arrayKeys = ['stations', 'chargingStations', 'sarjIstasyonlari', 'istasyonlar', 'items', 'results', 'result', 'data'];
 
+const turkeyProvinceNames = new Map([
+  'ADANA', 'ADIYAMAN', 'AFYONKARAHİSAR', 'AĞRI', 'AKSARAY', 'AMASYA', 'ANKARA', 'ANTALYA', 'ARDAHAN', 'ARTVİN',
+  'AYDIN', 'BALIKESİR', 'BARTIN', 'BATMAN', 'BAYBURT', 'BİLECİK', 'BİNGÖL', 'BİTLİS', 'BOLU', 'BURDUR',
+  'BURSA', 'ÇANAKKALE', 'ÇANKIRI', 'ÇORUM', 'DENİZLİ', 'DİYARBAKIR', 'DÜZCE', 'EDİRNE', 'ELAZIĞ', 'ERZİNCAN',
+  'ERZURUM', 'ESKİŞEHİR', 'GAZİANTEP', 'GİRESUN', 'GÜMÜŞHANE', 'HAKKARİ', 'HATAY', 'IĞDIR', 'ISPARTA', 'İSTANBUL',
+  'İZMİR', 'KAHRAMANMARAŞ', 'KARABÜK', 'KARAMAN', 'KARS', 'KASTAMONU', 'KAYSERİ', 'KIRIKKALE', 'KIRKLARELİ',
+  'KIRŞEHİR', 'KİLİS', 'KOCAELİ', 'KONYA', 'KÜTAHYA', 'MALATYA', 'MANİSA', 'MARDİN', 'MERSİN', 'MUĞLA',
+  'MUŞ', 'NEVŞEHİR', 'NİĞDE', 'ORDU', 'OSMANİYE', 'RİZE', 'SAKARYA', 'SAMSUN', 'SİİRT', 'SİNOP', 'SİVAS',
+  'ŞANLIURFA', 'ŞIRNAK', 'TEKİRDAĞ', 'TOKAT', 'TRABZON', 'TUNCELİ', 'UŞAK', 'VAN', 'YALOVA', 'YOZGAT', 'ZONGULDAK',
+].map((name) => [name, `${name[0]}${name.slice(1).toLocaleLowerCase('tr')}`]));
+
 const first = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
 const number = (value) => {
   const parsed = typeof value === 'string' ? Number(value.replace(',', '.')) : value;
   return Number.isFinite(parsed) ? parsed : undefined;
 };
+
+function locationFromAddress(address) {
+  if (typeof address !== 'string') return {};
+  const match = address.match(/(?:^|\s)(\S+(?:\s+Mayıs)?)\s*\/\s*([A-ZÇĞİÖŞÜ]+)\s*$/u);
+  if (!match) return {};
+  const city = turkeyProvinceNames.get(match[2].toLocaleUpperCase('tr'));
+  return city ? { district: match[1], city } : {};
+}
 
 export function slugify(value) {
   return String(value)
@@ -54,20 +73,21 @@ function accessLabel(raw) {
   const value = first(raw.publicAccess, raw.isPublic, raw.halkaAcik, raw.access, raw.accessType, raw.erisimTipi, raw.hizmetSekli);
   if (typeof value === 'boolean') return value ? 'Halka açık' : 'Özel erişim';
   const normalized = String(value ?? '').toLocaleLowerCase('tr');
-  return normalized.includes('özel') || normalized.includes('private') || normalized.includes('kapalı') ? 'Özel erişim' : 'Halka açık';
+  return normalized.includes('özel') || normalized.includes('ozel') || normalized.includes('private') || normalized.includes('kapalı') ? 'Özel erişim' : 'Halka açık';
 }
 
 export function normalizeRecord(raw) {
   const addressObject = raw.adres && typeof raw.adres === 'object' ? raw.adres : {};
   const location = raw.location ?? raw.konum ?? addressObject;
-  const coordinates = Array.isArray(location.coordinates) ? location.coordinates : [];
-  const id = String(first(raw.id, raw.stationId, raw.chargeStationId, raw.istasyonId, raw.sarjIstasyonId, raw.sarjIstasyonuNo, '')).trim();
-  const name = String(first(raw.name, raw.stationName, raw.istasyonAdi, raw.sarjIstasyonAdi, '')).trim();
-  const operator = String(first(raw.operatorName, raw.operator, raw.network, raw.firmaAdi, raw.lisansSahibi, raw.sarjAgiIsletmecisiUnvan, raw.sarjIstasyonuIsletmecisi, raw.marka, '')).trim();
-  const city = String(first(raw.city, raw.province, raw.il, raw.sehir, location.city, location.il, '')).trim();
-  const district = String(first(raw.district, raw.ilce, location.district, location.ilce, '')).trim();
   const flatAddress = typeof raw.adres === 'string' ? raw.adres : undefined;
-  const area = String(first(raw.address, flatAddress, location.fullAddress, location.acikAdres, location.address, location.adres, district, '')).trim();
+  const addressLocation = locationFromAddress(flatAddress);
+  const coordinates = Array.isArray(location.coordinates) ? location.coordinates : [];
+  const id = String(first(raw.id, raw.stationId, raw.chargeStationId, raw.istasyonId, raw.sarjIstasyonId, raw.sarjIstasyonuNo) ?? '').trim();
+  const name = String(first(raw.name, raw.stationName, raw.istasyonAdi, raw.sarjIstasyonAdi, raw.sarjIstasyonuAdi) ?? '').trim();
+  const operator = String(first(raw.operatorName, raw.operator, raw.network, raw.firmaAdi, raw.lisansSahibi, raw.sarjAgiIsletmecisiUnvan, raw.sarjIstasyonuIsletmecisi, raw.marka) ?? '').trim();
+  const city = String(first(raw.city, raw.province, raw.il, raw.sehir, location.city, location.il, addressLocation.city) ?? '').trim();
+  const district = String(first(raw.district, raw.ilce, location.district, location.ilce, addressLocation.district) ?? '').trim();
+  const area = String(first(raw.address, flatAddress, location.fullAddress, location.acikAdres, location.address, location.adres, district) ?? '').trim();
   const lat = number(first(raw.lat, raw.latitude, raw.enlem, location.lat, location.latitude, location.enlem, coordinates[1]));
   const lng = number(first(raw.lng, raw.lon, raw.longitude, raw.boylam, location.lng, location.lon, location.longitude, location.boylam, coordinates[0]));
   const connector = connectorSummary(raw);
@@ -108,7 +128,7 @@ export function normalizeEpdkSnapshot(payload, { retrievedAt = new Date().toISOS
     try {
       station = normalizeRecord(raw);
     } catch (error) {
-      rejected.push({ index, id: first(raw?.id, raw?.stationId, raw?.istasyonId, null), reason: error.message });
+      rejected.push({ index, id: first(raw?.id, raw?.stationId, raw?.istasyonId, raw?.sarjIstasyonuNo, null), reason: error.message });
       continue;
     }
     if (ids.has(station.id)) throw new Error(`EPDK snapshot contains duplicate station id ${station.id}`);

@@ -52,12 +52,13 @@ test('normalizes the official EPDK envelope and station field names', () => {
     statusDescription: 'OK',
     numRows: 1,
     errors: [],
-    result: [{
+    result: null,
+    data: [{
       sarjIstasyonuNo: 'EPDK-42',
       sarjIstasyonuAdi: 'Resmî İstasyon',
       sarjAgiIsletmecisiUnvan: 'Şarj Ağı AŞ',
-      hizmetSekli: 'Halka Açık',
-      adres: { il: 'İstanbul', ilce: 'Kadıköy', acikAdres: 'Koşuyolu, Kadıköy' },
+      hizmetSekli: 'OZEL',
+      adres: 'Koşuyolu Mahallesi Kadıköy / İSTANBUL',
       enlem: 41.01,
       boylam: 29.04,
       soketler: [{ soketTipi: 'DC', soketGucu: 120 }],
@@ -66,9 +67,32 @@ test('normalizes the official EPDK envelope and station field names', () => {
   const { dataset, report } = normalizeEpdkSnapshot(payload);
   assert.equal(report.acceptedCount, 1);
   assert.equal(dataset.stations[0].id, 'EPDK-42');
+  assert.equal(dataset.stations[0].name, 'Resmî İstasyon');
   assert.equal(dataset.stations[0].operator, 'Şarj Ağı AŞ');
-  assert.equal(dataset.stations[0].area, 'Koşuyolu, Kadıköy');
+  assert.equal(dataset.stations[0].area, 'Koşuyolu Mahallesi Kadıköy / İSTANBUL');
+  assert.equal(dataset.stations[0].city, 'İstanbul');
+  assert.equal(dataset.stations[0].district, 'Kadıköy');
+  assert.equal(dataset.stations[0].access, 'Özel erişim');
   assert.equal(dataset.stations[0].power, 120);
+});
+
+test('rejects a flat address when it does not identify a district and province', () => {
+  const raw = { ...rawStations[0], il: undefined, ilce: undefined, adres: 'Atatürk Mahallesi No:1' };
+  const { report } = normalizeEpdkSnapshot([raw]);
+  assert.equal(report.acceptedCount, 0);
+  assert.match(report.rejected[0].reason, /missing city, district/);
+});
+
+test('preserves the multi-word 19 Mayıs district from a flat EPDK address', () => {
+  const raw = {
+    ...rawStations[0],
+    il: undefined,
+    ilce: undefined,
+    adres: 'Dereköy Mahallesi 1 Sokağı No:4f 19 Mayıs / SAMSUN',
+  };
+  const { dataset } = normalizeEpdkSnapshot([raw]);
+  assert.equal(dataset.stations[0].district, '19 Mayıs');
+  assert.equal(dataset.stations[0].city, 'Samsun');
 });
 
 test('rejects an incomplete response envelope before normalization', () => {

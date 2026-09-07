@@ -3,6 +3,7 @@ import https from 'node:https';
 
 export const EPDK_STATIONS_URL = 'https://apigateway.epdk.gov.tr/sarjIstasyonlari/';
 export const EMPTY_STATION_FILTER = {};
+const REQUIRED_COLUMNS = ['sarjIstasyonuNo', 'sarjIstasyonuAdi', 'sarjAgiIsletmecisiUnvan', 'adres', 'enlem', 'boylam', 'soketler', 'hizmetSekli'];
 
 export function assertRequestInterval(state, { now = Date.now(), minIntervalMs = 60 * 60 * 1000 } = {}) {
   const lastAttempt = Date.parse(state?.lastAttemptAt ?? '');
@@ -53,8 +54,14 @@ export function validateEpdkServiceResponse(payload) {
   if (!payload || typeof payload !== 'object') throw new Error('EPDK response must be an object');
   if (payload.statusCode !== 200) throw new Error(`EPDK response status is ${payload.statusCode ?? 'missing'}: ${payload.statusDescription ?? 'unknown'}`);
   if (Array.isArray(payload.errors) && payload.errors.length) throw new Error(`EPDK response contains errors: ${JSON.stringify(payload.errors)}`);
-  if (!Array.isArray(payload.result)) throw new Error('EPDK response result must be an array');
-  if (!Number.isInteger(payload.numRows) || payload.numRows !== payload.result.length) throw new Error(`EPDK numRows ${payload.numRows ?? 'missing'} does not match result length ${payload.result.length}`);
-  if (payload.result.length === 0) throw new Error('EPDK returned zero stations');
+  const records = Array.isArray(payload.result) ? payload.result : payload.data;
+  if (!Array.isArray(records)) throw new Error('EPDK response data must be an array');
+  if (!Number.isInteger(payload.numRows) || payload.numRows !== records.length) throw new Error(`EPDK numRows ${payload.numRows ?? 'missing'} does not match data length ${records.length}`);
+  if (records.length === 0) throw new Error('EPDK returned zero stations');
+  if (payload.columnNames !== undefined) {
+    if (!Array.isArray(payload.columnNames)) throw new Error('EPDK columnNames must be an array');
+    const missingColumns = REQUIRED_COLUMNS.filter((column) => !payload.columnNames.includes(column));
+    if (missingColumns.length) throw new Error(`EPDK response is missing required columns: ${missingColumns.join(', ')}`);
+  }
   return payload;
 }
