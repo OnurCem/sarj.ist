@@ -25,6 +25,8 @@ Station fixtures are illustrative. No live availability, EPDK import, analytics,
 
 The interface is static Astro HTML with a small client-side Leaflet controller. `src/data/stations.ts` is the normalized data boundary; the future importer can replace its fixtures without coupling EPDK response fields to the UI.
 
+`npm run validate:data` rejects malformed coordinates, unsupported charger/access values, invalid timestamps, and duplicate stable IDs or slugs. The production build runs this validation first, and GitHub Actions runs the full build for pushes and pull requests.
+
 ## Validation
 
-Production build and JavaScript syntax checked. Browser interaction and visual testing have not been performed. Optional WebMCP support is feature-detected, but no supported WebMCP verification context was available.
+Production build, map filtering, generated route navigation, desktop rendering, and 390 px mobile layouts are checked. Optional WebMCP support is feature-detected.
