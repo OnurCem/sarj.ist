@@ -30,7 +30,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <div id="extra-filters" hidden><label>Operatör<select id="operator"><option value="all">Tüm operatörler</option><option>Zes</option><option>Eşarj</option><option>Trugo</option><option>Voltrun</option></select></label><label class="check-label"><input type="checkbox" id="private"/>Özel erişimli istasyonları dahil et</label></div>
         </section>
         <div class="results-heading"><h2>İstanbul</h2><span id="result-count"></span></div>
-        <div class="station-list" id="station-list" aria-live="polite"></div>
+        <div class="station-list" id="station-list" aria-live="polite"><div class="empty">İstasyonlar yükleniyor…</div></div>
         <footer class="data-note"><p>Örnek veriler · Anlık müsaitlik gösterilmez.</p></footer>
       </aside>
       <section class="map-region" aria-label="Şarj istasyonları haritası">

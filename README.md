@@ -27,6 +27,8 @@ The interface is static Astro HTML with a small client-side Leaflet controller. 
 
 `npm run validate:data` rejects malformed coordinates, unsupported charger/access values, invalid timestamps, and duplicate stable IDs or slugs. The production build runs this validation first, and GitHub Actions runs the full build for pushes and pull requests.
 
+`npm run prepare:data` converts the normalized source into a compact manifest and one JSON bundle per city under `public/data/`. The map loads only the İstanbul bundle; generated bundles are ignored by Git and rebuilt deterministically for development and production builds.
+
 ## Validation
 
 Production build, map filtering, generated route navigation, desktop rendering, and 390 px mobile layouts are checked. Optional WebMCP support is feature-detected.

@@ -1,9 +1,9 @@
 import L from 'leaflet';
-import { stations } from '../data/stations';
 
 const $ = (s) => document.querySelector(s);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
-let selected = stations[0]?.id ?? null;
+let stations = [];
+let selected = null;
 let type = 'all';
 let visible = [];
 let detailOpen = !window.matchMedia('(max-width:760px)').matches;
@@ -69,6 +69,21 @@ function render() {
   });
   renderDetail();
 }
+async function loadStations() {
+  try {
+    const response = await fetch('/data/regions/istanbul.json');
+    if (!response.ok) throw new Error(`Station bundle returned ${response.status}`);
+    const payload = await response.json();
+    if (payload.schemaVersion !== 1 || !Array.isArray(payload.stations)) throw new Error('Unsupported station bundle');
+    stations = payload.stations;
+    selected = stations[0]?.id ?? null;
+    render();
+  } catch (error) {
+    console.error('Station data could not be loaded', error);
+    $('#result-count').textContent = 'Veri yüklenemedi';
+    $('#station-list').innerHTML = '<div class="empty"><strong>İstasyonlar yüklenemedi.</strong><br/>Lütfen sayfayı yenileyerek tekrar dene.</div>';
+  }
+}
 function resetFilters() {
   $('#search-input').value = '';
   $('#operator').value = 'all';
@@ -105,7 +120,7 @@ routeDialog.id = 'route-dialog';
 routeDialog.innerHTML = `<h2>Yol tarifi, gerçek verilerle.</h2><p>Bu istasyon örnek olduğu için yol tarifi açılmaz. Gerçek istasyon verileri bağlandığında bu adım navigasyon uygulamasına yönlendirecek.</p><button class="primary">Anladım</button>`;
 document.body.append(routeDialog);
 routeDialog.querySelector('button').addEventListener('click', () => routeDialog.close());
-render();
+loadStations();
 
 // Optional agent interface: it shares the same filtering state as the UI.
 if (document.modelContext?.registerTool) {

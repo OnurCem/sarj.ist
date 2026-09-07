@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "astro dev --host 127.0.0.1",
+    "dev": "npm run prepare:data && astro dev --host 127.0.0.1",
     "validate:data": "node scripts/validate-stations.mjs",
-    "build": "npm run validate:data && astro build",
+    "prepare:data": "node scripts/build-station-data.mjs",
+    "build": "npm run validate:data && npm run prepare:data && astro build",
     "preview": "astro preview --host 127.0.0.1"
   },
   "dependencies": {
