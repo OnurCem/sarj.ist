@@ -84,7 +84,7 @@ export function normalizeRecord(raw) {
   const coordinates = Array.isArray(location.coordinates) ? location.coordinates : [];
   const id = String(first(raw.id, raw.stationId, raw.chargeStationId, raw.istasyonId, raw.sarjIstasyonId, raw.sarjIstasyonuNo) ?? '').trim();
   const name = String(first(raw.name, raw.stationName, raw.istasyonAdi, raw.sarjIstasyonAdi, raw.sarjIstasyonuAdi) ?? '').trim();
-  const operator = String(first(raw.operatorName, raw.operator, raw.network, raw.firmaAdi, raw.lisansSahibi, raw.sarjAgiIsletmecisiUnvan, raw.sarjIstasyonuIsletmecisi, raw.marka) ?? '').trim();
+  const operator = String(first(raw.operatorName, raw.operator, raw.network, raw.marka, raw.firmaAdi, raw.lisansSahibi, raw.sarjAgiIsletmecisiUnvan, raw.sarjIstasyonuIsletmecisi) ?? '').trim();
   const city = String(first(raw.city, raw.province, raw.il, raw.sehir, location.city, location.il, addressLocation.city) ?? '').trim();
   const district = String(first(raw.district, raw.ilce, location.district, location.ilce, addressLocation.district) ?? '').trim();
   const area = String(first(raw.address, flatAddress, location.fullAddress, location.acikAdres, location.address, location.adres, district) ?? '').trim();

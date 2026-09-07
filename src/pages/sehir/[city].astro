@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
 import { dataset, stations, type Station } from '../../data/stations';
+import { datasetPresentation } from '../../lib/station-presentation.mjs';
 
 export function getStaticPaths() {
   const cities = [...new Map(stations.map((station) => [station.citySlug, station.city])).entries()];
@@ -11,6 +12,7 @@ export function getStaticPaths() {
 interface Props { city: string; citySlug: string }
 const { city, citySlug } = Astro.props;
 const cityStations: Station[] = stations.filter((station) => station.citySlug === citySlug);
+const dataView = datasetPresentation(dataset);
 ---
 <BaseLayout title={`${city} elektrikli araç şarj istasyonları | şarj.ist`} description={`${city} elektrikli araç şarj istasyonlarını operatör, güç ve soket bilgileriyle incele.`} canonicalPath={`/sehir/${citySlug}/`}>
   <SiteHeader current="city" />
@@ -18,7 +20,7 @@ const cityStations: Station[] = stations.filter((station) => station.citySlug ==
     <a class="back-link" href="/">← Haritaya dön</a>
     <header class="city-heading">
       <h1>{city} şarj istasyonları</h1>
-      <p>{cityStations.length} örnek nokta · Anlık müsaitlik gösterilmez.</p>
+      <p>{cityStations.length} {dataView.isSample ? 'örnek nokta' : 'istasyon'} · Anlık müsaitlik gösterilmez.</p>
     </header>
     <div class="city-station-list">
       {cityStations.map((station) => (
@@ -30,6 +32,6 @@ const cityStations: Station[] = stations.filter((station) => station.citySlug ==
         </a>
       ))}
     </div>
-    <div class="sample-warning"><strong>{dataset.label}</strong><p>EPDK veri bağlantısı kurulana kadar bu kayıtlar arayüz geliştirmesi içindir.</p></div>
+    <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>
   </main>
 </BaseLayout>

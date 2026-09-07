@@ -22,13 +22,15 @@ See [the data pipeline documentation](docs/data-pipeline.md) for the response co
 
 ## Features
 
-- Responsive Turkish interface with map and station-list views.
+- Responsive Turkish interface with clustered map and station-list views.
 - Search by district, station name, and operator.
 - AC/DC, operator, and private-access filters.
 - Static pages for cities and individual stations.
 - Canonical metadata, sitemap, and robots directives.
 - Keyboard focus styles, reduced-motion support, and map error states.
 - Regional JSON bundles so the browser loads station data one city at a time.
+- Visible EPDK attribution and refresh date when production data is loaded.
+- External Google Maps directions for production station coordinates.
 
 The home map currently opens with İstanbul. Map tiles are provided by OpenStreetMap, and web fonts are loaded from Google Fonts; those resources require an internet connection.
 

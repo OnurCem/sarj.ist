@@ -57,6 +57,7 @@ test('normalizes the official EPDK envelope and station field names', () => {
       sarjIstasyonuNo: 'EPDK-42',
       sarjIstasyonuAdi: 'Resmî İstasyon',
       sarjAgiIsletmecisiUnvan: 'Şarj Ağı AŞ',
+      marka: 'Örnek Şarj',
       hizmetSekli: 'OZEL',
       adres: 'Koşuyolu Mahallesi Kadıköy / İSTANBUL',
       enlem: 41.01,
@@ -68,7 +69,7 @@ test('normalizes the official EPDK envelope and station field names', () => {
   assert.equal(report.acceptedCount, 1);
   assert.equal(dataset.stations[0].id, 'EPDK-42');
   assert.equal(dataset.stations[0].name, 'Resmî İstasyon');
-  assert.equal(dataset.stations[0].operator, 'Şarj Ağı AŞ');
+  assert.equal(dataset.stations[0].operator, 'Örnek Şarj');
   assert.equal(dataset.stations[0].area, 'Koşuyolu Mahallesi Kadıköy / İSTANBUL');
   assert.equal(dataset.stations[0].city, 'İstanbul');
   assert.equal(dataset.stations[0].district, 'Kadıköy');

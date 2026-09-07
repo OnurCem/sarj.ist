@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
 import { dataset, stations, type Station } from '../../data/stations';
+import { datasetPresentation, navigationUrl } from '../../lib/station-presentation.mjs';
 
 export function getStaticPaths() {
   return stations.map((station) => ({ params: { slug: station.slug }, props: { station } }));
@@ -10,6 +11,7 @@ export function getStaticPaths() {
 interface Props { station: Station }
 const { station } = Astro.props;
 const description = `${station.area} bölgesindeki ${station.operator} ${station.type} şarj noktası: ${station.power} kW azami güç ve ${station.sockets} soket.`;
+const dataView = datasetPresentation(dataset);
 ---
 <BaseLayout title={`${station.name} | şarj.ist`} description={description} canonicalPath={`/istasyon/${station.slug}/`}>
   <SiteHeader current="station" />
@@ -30,8 +32,11 @@ const description = `${station.area} bölgesindeki ${station.operator} ${station
         <div><dt>Soket sayısı</dt><dd>{station.sockets} soket</dd></div>
         <div><dt>Erişim</dt><dd>{station.access}</dd></div>
       </dl>
-      <div class="sample-warning"><strong>{dataset.label}</strong><p>Bu sayfadaki istasyon bilgileri yalnızca arayüz geliştirmesi içindir. Anlık müsaitlik gösterilmez ve seyahat planlamak için kullanılmamalıdır.</p></div>
-      <a class="primary page-action" href={`/sehir/${station.citySlug}/`}>{station.city} şarj istasyonlarını incele</a>
+      <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>
+      <div class="page-actions">
+        {!dataView.isSample && <a class="primary page-action" href={navigationUrl(station)} target="_blank" rel="noopener noreferrer">Yol tarifi al</a>}
+        <a class="primary page-action secondary-action" href={`/sehir/${station.citySlug}/`}>{station.city} şarj istasyonlarını incele</a>
+      </div>
     </article>
   </main>
 </BaseLayout>

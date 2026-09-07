@@ -1,0 +1,50 @@
+export function formatRefreshDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'bilinmiyor';
+  return new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long', timeZone: 'Europe/Istanbul' }).format(date);
+}
+
+export function datasetPresentation(meta = {}) {
+  const isSample = meta.isSample !== false;
+  const refreshedAt = formatRefreshDate(meta.refreshedAt);
+  if (isSample) {
+    return {
+      isSample,
+      badge: 'Tasarım önizlemesi',
+      summary: 'Örnek veriler · Anlık müsaitlik gösterilmez.',
+      about: 'Bu görünüm örnek istasyonlarla çalışır. Konumlar ve soket bilgileri yalnızca arayüz geliştirmesi içindir; seyahat planlamak için kullanılmamalıdır.',
+      warningTitle: meta.label || 'Örnek veriler',
+      warningText: 'Bu kayıtlar yalnızca arayüz geliştirmesi içindir. Anlık müsaitlik gösterilmez ve seyahat planlamak için kullanılmamalıdır.',
+    };
+  }
+  return {
+    isSample,
+    badge: 'EPDK verisi',
+    summary: `Kaynak: EPDK · Son güncelleme: ${refreshedAt} · Anlık müsaitlik gösterilmez.`,
+    about: 'İstasyon bilgileri Enerji Piyasası Düzenleme Kurumu (EPDK) verilerinden hazırlanır. Kayıtlar gerçek zamanlı müsaitlik, fiyat veya çalışma durumu içermez.',
+    warningTitle: 'Kaynak: EPDK',
+    warningText: `İstasyon bilgileri ${refreshedAt} tarihinde güncellenen EPDK verilerinden hazırlanmıştır. Anlık müsaitlik, fiyat ve çalışma durumu gösterilmez.`,
+  };
+}
+
+export function navigationUrl({ lat, lng }) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) throw new Error('Navigation coordinates must be finite numbers');
+  const destination = encodeURIComponent(`${lat},${lng}`);
+  return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+}
+
+export function operatorNames(stations) {
+  return [...new Set(stations.map(({ operator }) => operator).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr'));
+}
+
+export function operatorBadgeLabel(operator) {
+  const name = String(operator).trim();
+  if (name.length <= 8) return name.toLocaleLowerCase('tr');
+  const ignored = new Set(['anonim', 'limited', 'şirketi', 'ticaret', 'sanayi', 've']);
+  const initials = name.split(/\s+/).filter((word) => !ignored.has(word.toLocaleLowerCase('tr'))).slice(0, 3).map((word) => word[0]).join('');
+  return (initials || name.slice(0, 3)).toLocaleUpperCase('tr');
+}
+
+export function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
+}
