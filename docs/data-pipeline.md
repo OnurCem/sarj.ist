@@ -1,6 +1,6 @@
 # Station data ingestion
 
-The application reads its active normalized dataset from the ignored local file `data/stations.json`. EPDK station snapshots, import state, history, and raw responses must never be committed or pushed to GitHub. On a clean clone, the data preparation scripts copy the tracked design fixtures from `data/stations.sample.json` into the local active path.
+The application reads its generated active dataset from the ignored file `data/stations.json`. A downloaded EPDK response is not required for local development: on a clean clone, the data preparation scripts copy the tracked design fixtures from `data/stations.sample.json` into that path. EPDK station snapshots, import state, history, and raw responses must never be committed or pushed to GitHub.
 
 ## Import a saved response
 
