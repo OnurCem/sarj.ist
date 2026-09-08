@@ -16,6 +16,8 @@ test('attributes production datasets to EPDK with their refresh date', () => {
   assert.equal(view.badge, 'EPDK verisi');
   assert.match(view.summary, /Kaynak: EPDK/);
   assert.match(view.summary, /4 Eylül 2026/);
+  assert.match(view.about, /Enerji Piyasası Düzenleme Kurumu \(EPDK\)/);
+  assert.match(view.about, /Son güncelleme: 4 Eylül 2026/);
   assert.match(view.warningText, /Anlık müsaitlik, fiyat ve çalışma durumu gösterilmez/);
 });
 

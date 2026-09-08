@@ -21,7 +21,6 @@ const dataView = datasetPresentation(dataset);
     <header class="topbar">
       <a class="brand" href="/" aria-label="şarj.ist ana sayfa"><img src="/brand/mark.svg?v=3" width="39" height="39" alt=""/><span>şarj<span class="brand-light">.ist</span></span></a>
       <nav aria-label="Ana menü"><span class="nav-current">İstasyonları keşfet</span><button id="about-button">Nasıl çalışır?</button></nav>
-      <div class="header-right"><span class="demo-badge" id="dataset-badge">{dataView.badge}</span></div>
     </header>
     <main class="workspace">
       <aside class="sidebar" aria-label="İstasyon arama ve sonuçları">
@@ -38,7 +37,6 @@ const dataView = datasetPresentation(dataset);
         </section>
         <div class="results-heading"><h2 id="region-heading">Haritadaki istasyonlar</h2><span id="result-count"></span></div>
         <div class="station-list" id="station-list" aria-live="polite"><div class="empty">İstasyonlar yükleniyor…</div></div>
-        <footer class="data-note"><p id="data-note-text">{dataView.summary}</p></footer>
       </aside>
       <section class="map-region" aria-label="Şarj istasyonları haritası">
         <div id="map"></div>
@@ -51,6 +49,6 @@ const dataView = datasetPresentation(dataset);
       </section>
       <button id="mobile-toggle" class="mobile-toggle"><svg><use href="#pin"/></svg><span>Haritayı göster</span></button>
     </main>
-    <dialog id="about-dialog"><button class="dialog-close" aria-label="Kapat"><svg><use href="#close"/></svg></button><img src="/brand/mark.svg?v=3" width="54" height="54" alt=""/><h2>Şarj durağını bul.<br/>Yoluna devam et.</h2><p>İstasyonları haritada keşfet, AC veya DC şarj türüne göre filtrele ve bir istasyon seçerek detaylarını gör.</p><p id="about-data-copy">{dataView.about}</p><button class="primary dialog-done">Keşfetmeye başla <svg><use href="#arrow"/></svg></button></dialog>
+    <dialog id="about-dialog"><button class="dialog-close" aria-label="Kapat"><svg><use href="#close"/></svg></button><div class="dialog-brand" aria-label="şarj.ist"><span class="dialog-brand-mark" aria-hidden="true"></span><span>şarj<span class="brand-light">.ist</span></span></div><h2>Şarj durağını bul.<br/>Yoluna devam et.</h2><p>İstasyonları haritada keşfet, AC veya DC şarj türüne göre filtrele ve bir istasyon seçerek detaylarını gör.</p><p id="about-data-copy">{dataView.about}</p><button class="primary dialog-done">Keşfetmeye başla <svg><use href="#arrow"/></svg></button></dialog>
     <script src="../scripts/map.js"></script>
 </BaseLayout>

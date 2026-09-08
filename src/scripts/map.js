@@ -150,8 +150,6 @@ function renderViewportList() {
 
 function applyDatasetMeta(meta) {
   dataView = datasetPresentation(meta);
-  $('#dataset-badge').textContent = dataView.badge;
-  $('#data-note-text').textContent = dataView.summary;
   $('#about-data-copy').textContent = dataView.about;
 }
 

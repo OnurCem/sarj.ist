@@ -54,10 +54,13 @@ body,.workspace,.map-region,.leaflet-container { background: var(--header); colo
 .charger-pin.chosen { box-shadow: 0 0 0 10px #e3ff4825, 0 0 0 20px #e3ff4812, 0 4px 12px #0005; }
 .map-legend i { background: var(--accent); box-shadow: none; }
 .map-legend .ac-dot { background: #333c2e; box-shadow: 0 0 0 1px #a7b19a; }
-/* Tile colors are presentation-only; geographic data remains unchanged. */
-.leaflet-tile-pane { filter: grayscale(1) invert(1) contrast(1.2) brightness(.95); }
-.leaflet-control-attribution { background: #131612ed !important; color: var(--muted); }
-.leaflet-control-attribution a { color: var(--ink) !important; }
+/* Keep the standard daylight map legible against the dark application chrome. */
+.map-region,.leaflet-container { background: #dce5e8; }
+.leaflet-tile-pane { filter: none; }
+.leaflet-control-attribution { background: #fffffff0 !important; color: #44505a; }
+.leaflet-control-attribution a { color: #243646 !important; }
+.dialog-brand { display: flex; align-items: center; gap: 10px; width: max-content; font: 800 27px/1 Manrope,sans-serif; letter-spacing: -1.2px; color: var(--ink); }
+.dialog-brand-mark { width: 34px; height: 40px; background: var(--accent); mask: url('/brand/mark.svg?v=3') center / contain no-repeat; }
 .data-note p,.detail-note { font-size: 12px; }
 .station-area,.station-power>span,.detail-specs small { font-size: 13px; }
 .detail-specs strong { font-size: 15px; }
