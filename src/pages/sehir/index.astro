@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import { dataset, stations } from '../../data/stations';
+import { datasetPresentation, mapHref } from '../../lib/station-presentation.mjs';
+
+const dataView = datasetPresentation(dataset);
+const cities = [...Map.groupBy(stations, ({ citySlug }) => citySlug).entries()]
+  .map(([slug, cityStations]) => ({ slug, name: cityStations[0].city, count: cityStations.length }))
+  .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+---
+<BaseLayout title="Türkiye elektrikli araç şarj istasyonları | şarj.ist" description="Türkiye'deki elektrikli araç şarj istasyonlarını şehre göre keşfet.">
+  <SiteHeader current="city" />
+  <main class="content-page city-directory">
+    <a class="back-link" href="/">← Haritaya dön</a>
+    <header class="city-heading">
+      <p class="page-kicker">Türkiye şarj rehberi</p>
+      <h1>Şehrini seç.</h1>
+      <p>{cities.length} şehirde {stations.length} {dataView.isSample ? 'örnek istasyon' : 'istasyon'} listeleniyor.</p>
+    </header>
+    <div class="city-grid">
+      {cities.map((city) => (
+        <article class="city-card">
+          <div><h2>{city.name}</h2><p>{city.count} {dataView.isSample ? 'örnek nokta' : 'istasyon'}</p></div>
+          <div class="city-card-actions">
+            <a href={`/sehir/${city.slug}/`}>Listeyi incele</a>
+            <a href={mapHref(city.slug)}>Haritada aç →</a>
+          </div>
+        </article>
+      ))}
+    </div>
+    <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>
+  </main>
+</BaseLayout>

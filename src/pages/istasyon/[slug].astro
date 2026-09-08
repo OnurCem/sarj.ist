@@ -16,7 +16,7 @@ const dataView = datasetPresentation(dataset);
 <BaseLayout title={`${station.name} | şarj.ist`} description={description} canonicalPath={`/istasyon/${station.slug}/`}>
   <SiteHeader current="station" />
   <main class="content-page">
-    <a class="back-link" href="/">← Haritaya dön</a>
+    <a class="back-link" href={`/?sehir=${station.citySlug}`}>← {station.city} haritasına dön</a>
     <article class="station-page">
       <div class="page-heading">
         <span class="operator-mark">{station.operator.toLocaleLowerCase('tr')}</span>

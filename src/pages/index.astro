@@ -28,18 +28,19 @@ const dataView = datasetPresentation(dataset);
         <section class="search-section">
           
           <h1>Şarjını bul.<br/>Yoluna bak.</h1>
-          <p>İstanbul’daki şarj noktalarını keşfet.</p>
+          <p id="city-intro">İstanbul’daki şarj noktalarını keşfet.</p>
+          <label class="city-picker"><span>Şehir seç</span><select id="region-select" aria-label="Şehir seç"><option value="istanbul">İstanbul</option></select></label>
           <label class="searchbox"><svg><use href="#search"/></svg><input id="search-input" type="search" placeholder="İlçe, istasyon veya operatör ara" aria-label="İstasyon ara"/></label>
           <div class="quick-filters" aria-label="Şarj türü"><button class="chip active" data-type="all" aria-pressed="true">Tümü</button><button class="chip" data-type="DC" aria-pressed="false"><svg><use href="#bolt"/></svg>DC · Hızlı</button><button class="chip" data-type="AC" aria-pressed="false"><svg><use href="#plug"/></svg>AC</button><button class="chip filter-button" id="filters-button" aria-expanded="false" aria-controls="extra-filters" aria-label="Diğer filtreler"><svg><use href="#filter"/></svg></button></div>
           <div id="extra-filters" hidden><label>Operatör<select id="operator"><option value="all">Tüm operatörler</option></select></label><label class="check-label"><input type="checkbox" id="private"/>Özel erişimli istasyonları dahil et</label></div>
         </section>
-        <div class="results-heading"><h2>İstanbul</h2><span id="result-count"></span></div>
+        <div class="results-heading"><h2 id="region-heading">İstanbul</h2><span id="result-count"></span></div>
         <div class="station-list" id="station-list" aria-live="polite"><div class="empty">İstasyonlar yükleniyor…</div></div>
         <footer class="data-note"><p id="data-note-text">{dataView.summary}</p></footer>
       </aside>
       <section class="map-region" aria-label="Şarj istasyonları haritası">
         <div id="map"></div>
-        <div class="map-top"><div class="location-pill"><svg><use href="#pin"/></svg><strong>İstanbul, Türkiye</strong></div><button id="reset-map" class="map-action" aria-label="İstasyonları göster"><svg><use href="#target"/></svg></button></div>
+        <div class="map-top"><div class="location-pill"><svg><use href="#pin"/></svg><strong id="map-region-name">İstanbul, Türkiye</strong></div><button id="reset-map" class="map-action" aria-label="İstasyonları göster"><svg><use href="#target"/></svg></button></div>
         
         <div class="map-controls"><button id="zoom-in" aria-label="Haritayı yakınlaştır"><svg><use href="#plus"/></svg></button><button id="zoom-out" aria-label="Haritayı uzaklaştır"><svg><use href="#minus"/></svg></button></div>
         <div class="map-legend"><span><i class="dc-dot"></i>DC hızlı şarj</span><span><i class="ac-dot"></i>AC şarj</span></div>

@@ -17,7 +17,7 @@ const dataView = datasetPresentation(dataset);
 <BaseLayout title={`${city} elektrikli araç şarj istasyonları | şarj.ist`} description={`${city} elektrikli araç şarj istasyonlarını operatör, güç ve soket bilgileriyle incele.`} canonicalPath={`/sehir/${citySlug}/`}>
   <SiteHeader current="city" />
   <main class="content-page city-page">
-    <a class="back-link" href="/">← Haritaya dön</a>
+    <a class="back-link" href={`/?sehir=${citySlug}`}>← {city} haritasına dön</a>
     <header class="city-heading">
       <h1>{city} şarj istasyonları</h1>
       <p>{cityStations.length} {dataView.isSample ? 'örnek nokta' : 'istasyon'} · Anlık müsaitlik gösterilmez.</p>

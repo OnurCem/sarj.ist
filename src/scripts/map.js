@@ -1,11 +1,14 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { datasetPresentation, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames } from '../lib/station-presentation.mjs';
+import { datasetPresentation, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionSlugFromSearch } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
 const MAX_LIST_RESULTS = 200;
 let stations = [];
+let regions = [];
+let currentRegionSlug;
+let regionRequest = 0;
 let selected = null;
 let type = 'all';
 let visible = [];
@@ -13,6 +16,7 @@ let dataView = datasetPresentation();
 let detailOpen = !window.matchMedia('(max-width:760px)').matches;
 let searchTimer;
 const markers = new Map();
+const regionCache = new Map();
 
 const map = L.map('map', { zoomControl: false, scrollWheelZoom: true, maxZoom: 19 }).setView([41.08, 28.99], 13);
 const markerLayer = L.markerClusterGroup({
@@ -141,21 +145,115 @@ function populateOperators() {
   $('#operator').innerHTML = `<option value="all">Tüm operatörler</option>${operatorNames(stations).map((operator) => `<option value="${escapeHtml(operator)}">${escapeHtml(operator)}</option>`).join('')}`;
 }
 
-async function loadStations() {
+function populateRegions() {
+  $('#region-select').innerHTML = regions.map((region) => `<option value="${escapeHtml(region.slug)}">${escapeHtml(region.name)} (${region.count})</option>`).join('');
+}
+
+function setRegionLabels(region) {
+  $('#city-intro').textContent = `${region.name} şarj noktalarını keşfet.`;
+  $('#region-heading').textContent = region.name;
+  $('#map-region-name').textContent = `${region.name}, Türkiye`;
+}
+
+function clearFiltersWithoutRendering() {
+  $('#search-input').value = '';
+  $('#operator').value = 'all';
+  $('#private').checked = false;
+  type = 'all';
+  document.querySelectorAll('[data-type]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.type === type);
+    button.setAttribute('aria-pressed', String(button.dataset.type === type));
+  });
+}
+
+function fitMapToVisible() {
+  if (!visible.length) return;
+  if (visible.length === 1) {
+    map.setView([visible[0].lat, visible[0].lng], 14);
+    return;
+  }
+  map.fitBounds(visible.map(({ lat, lng }) => [lat, lng]), {
+    paddingTopLeft: window.matchMedia('(max-width:760px)').matches ? [50, 70] : [490, 90],
+    paddingBottomRight: [90, 120],
+    maxZoom: 14,
+  });
+}
+
+function updateRegionUrl(slug, replace = false) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('sehir', slug);
+  window.history[replace ? 'replaceState' : 'pushState']({ region: slug }, '', url);
+}
+
+async function fetchRegion(region) {
+  if (!regionCache.has(region.slug)) {
+    regionCache.set(region.slug, fetch(region.href).then(async (response) => {
+      if (!response.ok) throw new Error(`Station bundle returned ${response.status}`);
+      const payload = await response.json();
+      if (payload.schemaVersion !== 1 || payload.region?.slug !== region.slug || !Array.isArray(payload.stations)) throw new Error('Unsupported station bundle');
+      return payload;
+    }).catch((error) => {
+      regionCache.delete(region.slug);
+      throw error;
+    }));
+  }
+  return regionCache.get(region.slug);
+}
+
+async function loadRegion(slug, { updateUrl = true, replaceUrl = false } = {}) {
+  const region = regions.find((candidate) => candidate.slug === slug);
+  if (!region) return;
+  const request = ++regionRequest;
+  $('#region-select').value = region.slug;
+  $('#region-select').disabled = true;
+  $('#result-count').textContent = 'Yükleniyor…';
+  $('#station-list').innerHTML = `<div class="empty"><strong>${escapeHtml(region.name)} istasyonları yükleniyor…</strong></div>`;
+  markerLayer.clearLayers();
+  markers.clear();
+  stations = [];
+  selected = null;
+  detailOpen = false;
+  renderDetail();
   try {
-    const response = await fetch('/data/regions/istanbul.json');
-    if (!response.ok) throw new Error(`Station bundle returned ${response.status}`);
-    const payload = await response.json();
-    if (payload.schemaVersion !== 1 || !Array.isArray(payload.stations)) throw new Error('Unsupported station bundle');
+    const payload = await fetchRegion(region);
+    if (request !== regionRequest) return;
     stations = payload.stations;
+    currentRegionSlug = region.slug;
     applyDatasetMeta(payload.meta);
+    clearFiltersWithoutRendering();
     populateOperators();
-    selected = stations[0]?.id ?? null;
+    setRegionLabels(region);
     render();
+    fitMapToVisible();
+    if (updateUrl) updateRegionUrl(region.slug, replaceUrl);
   } catch (error) {
+    if (request !== regionRequest) return;
     console.error('Station data could not be loaded', error);
     $('#result-count').textContent = 'Veri yüklenemedi';
-    $('#station-list').innerHTML = '<div class="empty"><strong>İstasyonlar yüklenemedi.</strong><br/>Lütfen sayfayı yenileyerek tekrar dene.</div>';
+    $('#station-list').innerHTML = `<div class="empty"><strong>${escapeHtml(region.name)} istasyonları yüklenemedi.</strong><br/>Başka bir şehir seçebilir veya tekrar deneyebilirsin.<br/><button id="retry-region">Tekrar dene</button></div>`;
+    $('#retry-region').addEventListener('click', () => loadRegion(region.slug, { updateUrl: false }));
+  } finally {
+    if (request === regionRequest) $('#region-select').disabled = false;
+  }
+}
+
+async function initializeRegions() {
+  try {
+    const response = await fetch('/data/manifest.json');
+    if (!response.ok) throw new Error(`Region manifest returned ${response.status}`);
+    const manifest = await response.json();
+    if (manifest.schemaVersion !== 1 || !Array.isArray(manifest.regions) || !manifest.regions.length) throw new Error('Unsupported region manifest');
+    regions = manifest.regions;
+    applyDatasetMeta(manifest.meta);
+    populateRegions();
+    const requestedSlug = new URLSearchParams(window.location.search).get('sehir');
+    const initialSlug = regionSlugFromSearch(window.location.search, regions);
+    await loadRegion(initialSlug, { updateUrl: requestedSlug !== initialSlug, replaceUrl: true });
+  } catch (error) {
+    console.error('Station regions could not be loaded', error);
+    $('#region-select').disabled = true;
+    $('#result-count').textContent = 'Veri yüklenemedi';
+    $('#station-list').innerHTML = '<div class="empty"><strong>Şehir listesi yüklenemedi.</strong><br/>Lütfen sayfayı yenileyerek tekrar dene.</div>';
   }
 }
 
@@ -187,6 +285,7 @@ $('#search-input').addEventListener('input', () => {
   searchTimer = window.setTimeout(render, 120);
 });
 $('#operator').addEventListener('change', render);
+$('#region-select').addEventListener('change', () => loadRegion($('#region-select').value));
 $('#private').addEventListener('change', render);
 $('#filters-button').addEventListener('click', () => {
   const expanded = $('#filters-button').getAttribute('aria-expanded') === 'true';
@@ -196,11 +295,7 @@ $('#filters-button').addEventListener('click', () => {
 $('#zoom-in').addEventListener('click', () => map.zoomIn());
 $('#zoom-out').addEventListener('click', () => map.zoomOut());
 $('#reset-map').addEventListener('click', () => {
-  if (visible.length) map.fitBounds(visible.map(({ lat, lng }) => [lat, lng]), {
-    paddingTopLeft: window.matchMedia('(max-width:760px)').matches ? [50, 70] : [490, 90],
-    paddingBottomRight: [90, 120],
-    maxZoom: 14,
-  });
+  fitMapToVisible();
 });
 $('#mobile-toggle').addEventListener('click', () => setMapMode(!$('.workspace').classList.contains('map-mode')));
 $('#about-button').addEventListener('click', () => $('#about-dialog').showModal());
@@ -215,7 +310,11 @@ routeDialog.id = 'route-dialog';
 routeDialog.innerHTML = `<h2>Yol tarifi örnek verilerde kapalıdır.</h2><p>Bu konum yalnızca arayüz geliştirmesi içindir. EPDK verisiyle hazırlanan bir yayında bu düğme Google Maps yol tarifini açar.</p><button class="primary">Anladım</button>`;
 document.body.append(routeDialog);
 routeDialog.querySelector('button').addEventListener('click', () => routeDialog.close());
-loadStations();
+window.addEventListener('popstate', () => {
+  const slug = regionSlugFromSearch(window.location.search, regions);
+  if (slug && slug !== currentRegionSlug) loadRegion(slug, { updateUrl: false });
+});
+initializeRegions();
 
 // Optional agent interface: it shares the same filtering state as the UI.
 if (document.modelContext?.registerTool) {

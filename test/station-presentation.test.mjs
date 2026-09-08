@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { datasetPresentation, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames } from '../src/lib/station-presentation.mjs';
+import { datasetPresentation, escapeHtml, mapHref, navigationUrl, operatorBadgeLabel, operatorNames, regionSlugFromSearch } from '../src/lib/station-presentation.mjs';
 
 test('keeps sample datasets clearly marked as illustrative', () => {
   const view = datasetPresentation({ isSample: true, label: 'Örnek veriler', refreshedAt: '2026-09-07T00:00:00+03:00' });
@@ -32,4 +32,12 @@ test('sorts unique operators and creates compact badge labels', () => {
 
 test('escapes external station content before rendering HTML', () => {
   assert.equal(escapeHtml('<img src=x onerror="alert(1)">'), '&lt;img src=x onerror=&quot;alert(1)&quot;&gt;');
+});
+
+test('resolves URL-addressable regions with a safe fallback', () => {
+  const regions = [{ slug: 'ankara' }, { slug: 'istanbul' }];
+  assert.equal(regionSlugFromSearch('?sehir=ankara', regions), 'ankara');
+  assert.equal(regionSlugFromSearch('?sehir=unknown', regions), 'istanbul');
+  assert.equal(regionSlugFromSearch('', [{ slug: 'izmir' }]), 'izmir');
+  assert.equal(mapHref('şanlıurfa'), '/?sehir=%C5%9Fanl%C4%B1urfa');
 });

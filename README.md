@@ -22,13 +22,13 @@ See [the data pipeline documentation](docs/data-pipeline.md) for the response co
 
 ## Features
 
-- Responsive Turkish interface with clustered map and station-list views.
+- Responsive Turkish interface with clustered map and station-list views across all available provinces.
 - Search by district, station name, and operator.
 - AC/DC, operator, and private-access filters.
 - Static pages for cities and individual stations.
 - Canonical metadata, sitemap, and robots directives.
 - Keyboard focus styles, reduced-motion support, and map error states.
-- Regional JSON bundles so the browser loads station data one city at a time.
+- Province selection with URL-addressable views and regional JSON bundles, so the browser loads one city at a time.
 - Visible EPDK attribution and refresh date when production data is loaded.
 - External Google Maps directions for production station coordinates.
 

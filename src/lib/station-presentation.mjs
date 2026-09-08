@@ -45,6 +45,17 @@ export function operatorBadgeLabel(operator) {
   return (initials || name.slice(0, 3)).toLocaleUpperCase('tr');
 }
 
+export function mapHref(citySlug) {
+  return `/?sehir=${encodeURIComponent(citySlug)}`;
+}
+
+export function regionSlugFromSearch(search, regions) {
+  const requested = new URLSearchParams(search).get('sehir');
+  if (regions.some(({ slug }) => slug === requested)) return requested;
+  if (regions.some(({ slug }) => slug === 'istanbul')) return 'istanbul';
+  return regions[0]?.slug;
+}
+
 export function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
 }
