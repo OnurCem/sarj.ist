@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { datasetPresentation, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionSlugFromSearch } from '../lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -15,6 +15,8 @@ let visible = [];
 let dataView = datasetPresentation();
 let detailOpen = !window.matchMedia('(max-width:760px)').matches;
 let searchTimer;
+let currentPosition;
+let userLocationMarker;
 const markers = new Map();
 const regionCache = new Map();
 
@@ -53,7 +55,9 @@ function operatorMark(station) {
 
 function card(station) {
   const title = escapeHtml(station.name.split(' · ')[0]);
-  return `<button class="station-card ${station.id === selected ? 'selected' : ''}" data-id="${escapeHtml(station.id)}" aria-label="${escapeHtml(station.name)}, ${station.power} kW, detayları göster" aria-pressed="${station.id === selected}">${operatorMark(station)}<div class="station-copy"><h3>${title}<span> · Şarj noktası</span></h3><p class="station-area">${escapeHtml(station.area)}${station.access === 'Özel erişim' ? ' · Özel erişim' : ''}</p></div><div class="station-power ${station.type === 'AC' ? 'ac' : ''}"><strong>${station.type} ${station.power} kW</strong><span>${station.sockets} soket</span></div><svg class="station-arrow" aria-hidden="true"><use href="#chevron"/></svg></button>`;
+  const distance = currentPosition ? distanceKm(currentPosition, station) : undefined;
+  const distanceLabel = distance === undefined ? '' : `<span class="station-distance"> · ${distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toLocaleString('tr', { maximumFractionDigits: 1 })} km`}</span>`;
+  return `<button class="station-card ${station.id === selected ? 'selected' : ''}" data-id="${escapeHtml(station.id)}" aria-label="${escapeHtml(station.name)}, ${station.power} kW, detayları göster" aria-pressed="${station.id === selected}">${operatorMark(station)}<div class="station-copy"><h3>${title}<span> · Şarj noktası</span></h3><p class="station-area">${escapeHtml(station.area)}${station.access === 'Özel erişim' ? ' · Özel erişim' : ''}${distanceLabel}</p></div><div class="station-power ${station.type === 'AC' ? 'ac' : ''}"><strong>${station.type} ${station.power} kW</strong><span>${station.sockets} soket</span></div><svg class="station-arrow" aria-hidden="true"><use href="#chevron"/></svg></button>`;
 }
 
 function renderDetail() {
@@ -101,8 +105,9 @@ function render() {
     (type === 'all' || station.type === type)
     && ($('#operator').value === 'all' || station.operator === $('#operator').value)
     && ($('#private').checked || station.access === 'Halka açık')
-    && `${station.name} ${station.area} ${station.operator}`.toLocaleLowerCase('tr').includes(query)
+    && `${station.name} ${station.area} ${station.city} ${station.operator}`.toLocaleLowerCase('tr').includes(query)
   ));
+  if (currentPosition) visible.sort((a, b) => distanceKm(currentPosition, a) - distanceKm(currentPosition, b));
   if (!visible.some(({ id }) => id === selected)) { selected = null; detailOpen = false; }
   $('#result-count').textContent = `${visible.length} istasyon`;
 
@@ -155,14 +160,28 @@ function setRegionLabels(region) {
   $('#map-region-name').textContent = `${region.name}, Türkiye`;
 }
 
-function clearFiltersWithoutRendering() {
-  $('#search-input').value = '';
+function clearFiltersWithoutRendering({ preserveSearch = false } = {}) {
+  if (!preserveSearch) $('#search-input').value = '';
   $('#operator').value = 'all';
   $('#private').checked = false;
   type = 'all';
   document.querySelectorAll('[data-type]').forEach((button) => {
     button.classList.toggle('active', button.dataset.type === type);
     button.setAttribute('aria-pressed', String(button.dataset.type === type));
+  });
+}
+
+function clearUserLocation() {
+  currentPosition = undefined;
+  if (userLocationMarker) map.removeLayer(userLocationMarker);
+  userLocationMarker = undefined;
+  document.querySelectorAll('.location-status-message').forEach((status) => { status.hidden = true; });
+}
+
+function showLocationStatus(message) {
+  document.querySelectorAll('.location-status-message').forEach((status) => {
+    status.textContent = message;
+    status.hidden = false;
   });
 }
 
@@ -200,10 +219,11 @@ async function fetchRegion(region) {
   return regionCache.get(region.slug);
 }
 
-async function loadRegion(slug, { updateUrl = true, replaceUrl = false } = {}) {
+async function loadRegion(slug, { updateUrl = true, replaceUrl = false, preserveSearch = false, preserveLocation = false } = {}) {
   const region = regions.find((candidate) => candidate.slug === slug);
   if (!region) return;
   const request = ++regionRequest;
+  if (!preserveLocation) clearUserLocation();
   $('#region-select').value = region.slug;
   $('#region-select').disabled = true;
   $('#result-count').textContent = 'Yükleniyor…';
@@ -220,20 +240,62 @@ async function loadRegion(slug, { updateUrl = true, replaceUrl = false } = {}) {
     stations = payload.stations;
     currentRegionSlug = region.slug;
     applyDatasetMeta(payload.meta);
-    clearFiltersWithoutRendering();
+    clearFiltersWithoutRendering({ preserveSearch });
     populateOperators();
     setRegionLabels(region);
     render();
     fitMapToVisible();
     if (updateUrl) updateRegionUrl(region.slug, replaceUrl);
+    return true;
   } catch (error) {
     if (request !== regionRequest) return;
     console.error('Station data could not be loaded', error);
     $('#result-count').textContent = 'Veri yüklenemedi';
     $('#station-list').innerHTML = `<div class="empty"><strong>${escapeHtml(region.name)} istasyonları yüklenemedi.</strong><br/>Başka bir şehir seçebilir veya tekrar deneyebilirsin.<br/><button id="retry-region">Tekrar dene</button></div>`;
     $('#retry-region').addEventListener('click', () => loadRegion(region.slug, { updateUrl: false }));
+    return false;
   } finally {
     if (request === regionRequest) $('#region-select').disabled = false;
+  }
+}
+
+async function locateUser() {
+  if (!navigator.geolocation) {
+    showLocationStatus('Tarayıcın konum paylaşımını desteklemiyor. Şehir adını arayabilirsin.');
+    return;
+  }
+  const buttons = document.querySelectorAll('.locate-me, #locate-me-list');
+  buttons.forEach((button) => { button.setAttribute('aria-busy', 'true'); button.disabled = true; });
+  showLocationStatus('Konumun alınıyor…');
+  try {
+    const position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 12_000,
+      maximumAge: 300_000,
+    }));
+    const coordinates = { lat: position.coords.latitude, lng: position.coords.longitude };
+    const region = closestRegion(coordinates, regions);
+    if (!region) throw new Error('Yakın şehir bulunamadı');
+    const loaded = await loadRegion(region.slug, { preserveLocation: true });
+    if (!loaded) throw new Error('Yakındaki istasyonlar yüklenemedi');
+    currentPosition = coordinates;
+    userLocationMarker = L.marker([coordinates.lat, coordinates.lng], {
+      icon: L.divIcon({ className: 'user-location-marker', iconSize: [18, 18], iconAnchor: [9, 9] }),
+      title: 'Konumun',
+      alt: 'Konumun',
+      keyboard: false,
+      zIndexOffset: 2000,
+    }).addTo(map);
+    render();
+    map.setView([coordinates.lat, coordinates.lng], 13);
+    $('#map-region-name').textContent = `Konumun · ${region.name}`;
+    showLocationStatus(`${region.name} çevresindeki istasyonlar yakınlığa göre sıralandı.`);
+    if (window.matchMedia('(max-width:760px)').matches) setMapMode(true);
+  } catch (error) {
+    const denied = error?.code === 1;
+    showLocationStatus(denied ? 'Konum izni verilmedi. Şehir adını arayabilir veya listeden seçebilirsin.' : 'Konum alınamadı. Şehir adını arayabilir veya listeden seçebilirsin.');
+  } finally {
+    buttons.forEach((button) => { button.removeAttribute('aria-busy'); button.disabled = false; });
   }
 }
 
@@ -282,7 +344,11 @@ function setMapMode(enabled) {
 document.querySelectorAll('[data-type]').forEach((button) => button.addEventListener('click', () => setType(button.dataset.type)));
 $('#search-input').addEventListener('input', () => {
   window.clearTimeout(searchTimer);
-  searchTimer = window.setTimeout(render, 120);
+  searchTimer = window.setTimeout(async () => {
+    const region = regionFromQuery($('#search-input').value, regions);
+    if (region && region.slug !== currentRegionSlug) await loadRegion(region.slug, { preserveSearch: true });
+    else render();
+  }, 180);
 });
 $('#operator').addEventListener('change', render);
 $('#region-select').addEventListener('change', () => loadRegion($('#region-select').value));
@@ -294,9 +360,8 @@ $('#filters-button').addEventListener('click', () => {
 });
 $('#zoom-in').addEventListener('click', () => map.zoomIn());
 $('#zoom-out').addEventListener('click', () => map.zoomOut());
-$('#reset-map').addEventListener('click', () => {
-  fitMapToVisible();
-});
+$('#locate-me').addEventListener('click', locateUser);
+$('#locate-me-list').addEventListener('click', locateUser);
 $('#mobile-toggle').addEventListener('click', () => setMapMode(!$('.workspace').classList.contains('map-mode')));
 $('#about-button').addEventListener('click', () => $('#about-dialog').showModal());
 document.querySelectorAll('#about-dialog .dialog-close, .dialog-done').forEach((button) => button.addEventListener('click', () => $('#about-dialog').close()));

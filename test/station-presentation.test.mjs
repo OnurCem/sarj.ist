@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { datasetPresentation, escapeHtml, mapHref, navigationUrl, operatorBadgeLabel, operatorNames, regionSlugFromSearch } from '../src/lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, mapHref, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch } from '../src/lib/station-presentation.mjs';
 
 test('keeps sample datasets clearly marked as illustrative', () => {
   const view = datasetPresentation({ isSample: true, label: 'Örnek veriler', refreshedAt: '2026-09-07T00:00:00+03:00' });
@@ -40,4 +40,20 @@ test('resolves URL-addressable regions with a safe fallback', () => {
   assert.equal(regionSlugFromSearch('?sehir=unknown', regions), 'istanbul');
   assert.equal(regionSlugFromSearch('', [{ slug: 'izmir' }]), 'izmir');
   assert.equal(mapHref('şanlıurfa'), '/?sehir=%C5%9Fanl%C4%B1urfa');
+});
+
+test('finds a uniquely matching province from map search text', () => {
+  const regions = [{ slug: 'ankara', name: 'Ankara' }, { slug: 'antalya', name: 'Antalya' }, { slug: 'istanbul', name: 'İstanbul' }];
+  assert.equal(regionFromQuery('ank', regions)?.slug, 'ankara');
+  assert.equal(regionFromQuery('istanbul', regions)?.slug, 'istanbul');
+  assert.equal(regionFromQuery('an', regions), undefined);
+});
+
+test('finds the nearest regional center and calculates distance', () => {
+  const regions = [
+    { slug: 'ankara', center: { lat: 39.93, lng: 32.86 } },
+    { slug: 'izmir', center: { lat: 38.42, lng: 27.14 } },
+  ];
+  assert.equal(closestRegion({ lat: 39.9, lng: 32.8 }, regions)?.slug, 'ankara');
+  assert.ok(distanceKm({ lat: 39.9, lng: 32.8 }, { lat: 39.93, lng: 32.86 }) < 7);
 });

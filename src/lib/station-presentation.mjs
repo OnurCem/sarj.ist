@@ -56,6 +56,30 @@ export function regionSlugFromSearch(search, regions) {
   return regions[0]?.slug;
 }
 
+export function normalizedSearch(value) {
+  return String(value).trim().toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+export function regionFromQuery(query, regions) {
+  const requested = normalizedSearch(query);
+  if (requested.length < 2) return undefined;
+  const matches = regions.filter(({ name, slug }) => normalizedSearch(name).startsWith(requested) || normalizedSearch(slug) === requested);
+  return matches.length === 1 ? matches[0] : matches.find(({ name, slug }) => [normalizedSearch(name), normalizedSearch(slug)].includes(requested));
+}
+
+export function distanceKm(from, to) {
+  const radians = (degrees) => degrees * Math.PI / 180;
+  const deltaLat = radians(to.lat - from.lat);
+  const deltaLng = radians(to.lng - from.lng);
+  const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(radians(from.lat)) * Math.cos(radians(to.lat)) * Math.sin(deltaLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export function closestRegion(position, regions) {
+  return regions.filter(({ center }) => Number.isFinite(center?.lat) && Number.isFinite(center?.lng))
+    .reduce((closest, region) => !closest || distanceKm(position, region.center) < distanceKm(position, closest.center) ? region : closest, undefined);
+}
+
 export function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
 }

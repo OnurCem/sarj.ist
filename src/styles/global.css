@@ -30,10 +30,14 @@ dialog{border:1px solid #eee2e8;border-radius:22px;padding:34px;max-width:460px;
 .secondary-action{background:var(--raised);color:var(--ink);border:1px solid var(--line)}
 .secondary-action:hover{background:var(--selected)}
 @media(max-width:760px){.page-actions{flex-direction:column}.detail-access{max-width:150px}}
-.city-picker{display:flex;align-items:center;gap:12px;margin:-10px 0 16px;padding:8px 8px 8px 13px;border:1px solid var(--control-line);border-radius:9px;color:var(--muted);font-size:13px}
+.city-picker{display:flex;align-items:center;gap:12px;margin:10px 0 0;padding:8px 8px 8px 13px;border:1px solid var(--control-line);border-radius:9px;color:var(--muted);font-size:12px}
 .city-picker span{white-space:nowrap}
 .city-picker select{width:100%;max-width:none;margin-left:auto;border:0;background:transparent;color:var(--ink);font-weight:600;outline:0}
 .city-picker:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px #e3ff4820}
+.nearby-button{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:9px;padding:10px 12px;border:1px solid var(--control-line);border-radius:9px;background:transparent;color:var(--ink);font-size:13px;font-weight:600}
+.nearby-button:hover{border-color:var(--accent);color:var(--accent)}
+.nearby-button svg{width:17px;height:17px}
+.sidebar-location-status{margin:8px 2px 0!important;color:var(--muted)!important;font-size:12px!important;line-height:1.4!important}
 .city-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .city-card{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
 .city-card h2{font:750 20px/1.2 Manrope,sans-serif}
@@ -42,4 +46,8 @@ dialog{border:1px solid #eee2e8;border-radius:22px;padding:34px;max-width:460px;
 .city-card-actions a{color:var(--accent);font-size:13px;font-weight:600;text-decoration:none}
 .city-card-actions a:first-child{color:var(--muted);font-weight:500}
 .city-directory .sample-warning{margin-top:28px}
-@media(max-width:760px){.city-picker{margin-top:-8px}.city-grid{grid-template-columns:1fr}.city-card{padding:18px}.city-card-actions{white-space:normal}}
+.location-status{position:absolute;right:0;top:58px;width:260px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);box-shadow:0 3px 12px #0002;color:var(--ink);font-size:12px;line-height:1.45}
+.map-action[aria-busy=true],.nearby-button[aria-busy=true]{color:var(--accent);cursor:wait}
+.user-location-marker{border:3px solid var(--surface);border-radius:50%;background:#4285f4;box-shadow:0 0 0 7px #4285f433,0 2px 8px #0005}
+.station-distance{color:var(--ink);font-weight:600;white-space:nowrap}
+@media(max-width:760px){.city-picker{margin-top:10px}.city-grid{grid-template-columns:1fr}.city-card{padding:18px}.city-card-actions{white-space:normal}.location-status{left:0;right:auto;width:min(270px,calc(100vw - 78px))}}

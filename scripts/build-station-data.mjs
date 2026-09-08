@@ -13,6 +13,14 @@ await mkdir(regionsRoot, { recursive: true });
 
 const regions = [];
 for (const [slug, stations] of [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+  const latitudes = stations.map(({ lat }) => lat);
+  const longitudes = stations.map(({ lng }) => lng);
+  const bounds = {
+    south: Math.min(...latitudes),
+    west: Math.min(...longitudes),
+    north: Math.max(...latitudes),
+    east: Math.max(...longitudes),
+  };
   const payload = {
     schemaVersion: 1,
     region: { slug, name: stations[0].city },
@@ -21,7 +29,14 @@ for (const [slug, stations] of [...grouped.entries()].sort(([a], [b]) => a.local
   };
   const href = `/data/regions/${slug}.json`;
   await writeFile(resolve(regionsRoot, `${slug}.json`), JSON.stringify(payload));
-  regions.push({ slug, name: stations[0].city, href, count: stations.length });
+  regions.push({
+    slug,
+    name: stations[0].city,
+    href,
+    count: stations.length,
+    bounds,
+    center: { lat: (bounds.south + bounds.north) / 2, lng: (bounds.west + bounds.east) / 2 },
+  });
 }
 
 const manifest = { schemaVersion: 1, meta: source.meta, totalStations: source.stations.length, regions };

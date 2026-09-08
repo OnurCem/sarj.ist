@@ -23,7 +23,8 @@ See [the data pipeline documentation](docs/data-pipeline.md) for the response co
 ## Features
 
 - Responsive Turkish interface with clustered map and station-list views across all available provinces.
-- Search by district, station name, and operator.
+- Search by province, district, station name, and operator; typing a province moves the map without requiring the dropdown.
+- Optional browser geolocation that focuses the map and sorts nearby stations by distance.
 - AC/DC, operator, and private-access filters.
 - Static pages for cities and individual stations.
 - Canonical metadata, sitemap, and robots directives.
