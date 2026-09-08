@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch } from '../lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionAtPosition, regionFromQuery, regionSlugFromSearch } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -17,6 +17,7 @@ let detailOpen = !window.matchMedia('(max-width:760px)').matches;
 let searchTimer;
 let currentPosition;
 let userLocationMarker;
+let userMapNavigation = false;
 const markers = new Map();
 const regionCache = new Map();
 
@@ -219,7 +220,7 @@ async function fetchRegion(region) {
   return regionCache.get(region.slug);
 }
 
-async function loadRegion(slug, { updateUrl = true, replaceUrl = false, preserveSearch = false, preserveLocation = false } = {}) {
+async function loadRegion(slug, { updateUrl = true, replaceUrl = false, preserveSearch = false, preserveLocation = false, fitMap = true } = {}) {
   const region = regions.find((candidate) => candidate.slug === slug);
   if (!region) return;
   const request = ++regionRequest;
@@ -244,7 +245,7 @@ async function loadRegion(slug, { updateUrl = true, replaceUrl = false, preserve
     populateOperators();
     setRegionLabels(region);
     render();
-    fitMapToVisible();
+    if (fitMap) fitMapToVisible();
     if (updateUrl) updateRegionUrl(region.slug, replaceUrl);
     return true;
   } catch (error) {
@@ -257,6 +258,12 @@ async function loadRegion(slug, { updateUrl = true, replaceUrl = false, preserve
   } finally {
     if (request === regionRequest) $('#region-select').disabled = false;
   }
+}
+
+function loadRegionAtMapCenter() {
+  const center = map.getCenter();
+  const region = regionAtPosition({ lat: center.lat, lng: center.lng }, regions);
+  if (region && region.slug !== currentRegionSlug) loadRegion(region.slug, { fitMap: false });
 }
 
 async function locateUser() {
@@ -363,6 +370,13 @@ $('#zoom-out').addEventListener('click', () => map.zoomOut());
 $('#locate-me').addEventListener('click', locateUser);
 $('#locate-me-list').addEventListener('click', locateUser);
 $('#mobile-toggle').addEventListener('click', () => setMapMode(!$('.workspace').classList.contains('map-mode')));
+const mapContainer = map.getContainer();
+['pointerdown', 'wheel', 'touchstart', 'keydown'].forEach((eventName) => mapContainer.addEventListener(eventName, () => { userMapNavigation = true; }, { passive: true }));
+map.on('moveend', () => {
+  if (!userMapNavigation) return;
+  userMapNavigation = false;
+  loadRegionAtMapCenter();
+});
 $('#about-button').addEventListener('click', () => $('#about-dialog').showModal());
 document.querySelectorAll('#about-dialog .dialog-close, .dialog-done').forEach((button) => button.addEventListener('click', () => $('#about-dialog').close()));
 document.addEventListener('keydown', (event) => {

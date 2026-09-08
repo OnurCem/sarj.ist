@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, mapHref, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch } from '../src/lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, mapHref, navigationUrl, operatorBadgeLabel, operatorNames, regionAtPosition, regionFromQuery, regionSlugFromSearch } from '../src/lib/station-presentation.mjs';
 
 test('keeps sample datasets clearly marked as illustrative', () => {
   const view = datasetPresentation({ isSample: true, label: 'Örnek veriler', refreshedAt: '2026-09-07T00:00:00+03:00' });
@@ -56,4 +56,13 @@ test('finds the nearest regional center and calculates distance', () => {
   ];
   assert.equal(closestRegion({ lat: 39.9, lng: 32.8 }, regions)?.slug, 'ankara');
   assert.ok(distanceKm({ lat: 39.9, lng: 32.8 }, { lat: 39.93, lng: 32.86 }) < 7);
+});
+
+test('resolves the province centered in the map viewport', () => {
+  const regions = [
+    { slug: 'istanbul', center: { lat: 41.01, lng: 28.97 }, bounds: { south: 40.8, west: 28.4, north: 41.3, east: 29.5 } },
+    { slug: 'ankara', center: { lat: 39.93, lng: 32.86 }, bounds: { south: 39.4, west: 31.8, north: 40.5, east: 33.8 } },
+  ];
+  assert.equal(regionAtPosition({ lat: 39.95, lng: 32.9 }, regions)?.slug, 'ankara');
+  assert.equal(regionAtPosition({ lat: 40.7, lng: 30.7 }, regions)?.slug, 'istanbul');
 });

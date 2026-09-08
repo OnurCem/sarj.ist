@@ -80,6 +80,13 @@ export function closestRegion(position, regions) {
     .reduce((closest, region) => !closest || distanceKm(position, region.center) < distanceKm(position, closest.center) ? region : closest, undefined);
 }
 
+export function regionAtPosition(position, regions) {
+  const containing = regions.filter(({ bounds }) => bounds
+    && position.lat >= bounds.south && position.lat <= bounds.north
+    && position.lng >= bounds.west && position.lng <= bounds.east);
+  return closestRegion(position, containing.length ? containing : regions);
+}
+
 export function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
 }
