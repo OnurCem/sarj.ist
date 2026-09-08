@@ -34,7 +34,7 @@ const dataView = datasetPresentation(dataset);
           <button id="locate-me-list" class="nearby-button" type="button"><svg><use href="#target"/></svg>Konumuma yakın istasyonlar</button>
           <p class="sidebar-location-status location-status-message" role="status" hidden></p>
           <div class="quick-filters" aria-label="Şarj türü"><button class="chip active" data-type="all" aria-pressed="true">Tümü</button><button class="chip" data-type="DC" aria-pressed="false"><svg><use href="#bolt"/></svg>DC · Hızlı</button><button class="chip" data-type="AC" aria-pressed="false"><svg><use href="#plug"/></svg>AC</button><button class="chip filter-button" id="filters-button" aria-expanded="false" aria-controls="extra-filters" aria-label="Diğer filtreler"><svg><use href="#filter"/></svg></button></div>
-          <div id="extra-filters" hidden><label>Operatör<select id="operator"><option value="all">Tüm operatörler</option></select></label><label class="check-label"><input type="checkbox" id="private"/>Özel erişimli istasyonları dahil et</label></div>
+          <div id="extra-filters" hidden><label>Operatör<select id="operator"><option value="all">Tüm operatörler</option></select></label><label class="check-label"><input type="checkbox" id="private" checked/>Özel erişimli istasyonları dahil et</label></div>
         </section>
         <div class="results-heading"><h2 id="region-heading">Haritadaki istasyonlar</h2><span id="result-count"></span></div>
         <div class="station-list" id="station-list" aria-live="polite"><div class="empty">İstasyonlar yükleniyor…</div></div>

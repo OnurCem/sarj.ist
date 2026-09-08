@@ -173,7 +173,7 @@ function setRegionLabels(region) {
 function clearFiltersWithoutRendering({ preserveSearch = false } = {}) {
   if (!preserveSearch) $('#search-input').value = '';
   $('#operator').value = 'all';
-  $('#private').checked = false;
+  $('#private').checked = true;
   type = 'all';
   document.querySelectorAll('[data-type]').forEach((button) => {
     button.classList.toggle('active', button.dataset.type === type);
@@ -303,7 +303,7 @@ async function initializeRegions() {
 function resetFilters() {
   $('#search-input').value = '';
   $('#operator').value = 'all';
-  $('#private').checked = false;
+  $('#private').checked = true;
   setType('all');
 }
 
