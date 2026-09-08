@@ -41,4 +41,5 @@ for (const [slug, stations] of [...grouped.entries()].sort(([a], [b]) => a.local
 
 const manifest = { schemaVersion: 1, meta: source.meta, totalStations: source.stations.length, regions };
 await writeFile(resolve(outputRoot, 'manifest.json'), JSON.stringify(manifest));
+await writeFile(resolve(outputRoot, 'stations.json'), JSON.stringify({ schemaVersion: 1, meta: source.meta, stations: source.stations }));
 console.log(`Built ${regions.length} regional bundle containing ${source.stations.length} stations`);

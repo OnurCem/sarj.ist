@@ -52,6 +52,7 @@ export function mapHref(citySlug) {
 export function regionSlugFromSearch(search, regions) {
   const requested = new URLSearchParams(search).get('sehir');
   if (regions.some(({ slug }) => slug === requested)) return requested;
+  if (regions.some(({ slug }) => slug === 'all')) return 'all';
   if (regions.some(({ slug }) => slug === 'istanbul')) return 'istanbul';
   return regions[0]?.slug;
 }
@@ -78,13 +79,6 @@ export function distanceKm(from, to) {
 export function closestRegion(position, regions) {
   return regions.filter(({ center }) => Number.isFinite(center?.lat) && Number.isFinite(center?.lng))
     .reduce((closest, region) => !closest || distanceKm(position, region.center) < distanceKm(position, closest.center) ? region : closest, undefined);
-}
-
-export function regionAtPosition(position, regions) {
-  const containing = regions.filter(({ bounds }) => bounds
-    && position.lat >= bounds.south && position.lat <= bounds.north
-    && position.lng >= bounds.west && position.lng <= bounds.east);
-  return closestRegion(position, containing.length ? containing : regions);
 }
 
 export function escapeHtml(value) {

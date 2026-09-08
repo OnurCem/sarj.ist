@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionAtPosition, regionFromQuery, regionSlugFromSearch } from '../lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -8,7 +8,6 @@ const MAX_LIST_RESULTS = 200;
 let stations = [];
 let regions = [];
 let currentRegionSlug;
-let regionRequest = 0;
 let selected = null;
 let type = 'all';
 let visible = [];
@@ -18,13 +17,14 @@ let searchTimer;
 let currentPosition;
 let userLocationMarker;
 let userMapNavigation = false;
+let mapReady = false;
+let countryOverview = false;
 const markers = new Map();
-const regionCache = new Map();
 
 const map = L.map('map', { zoomControl: false, scrollWheelZoom: true, maxZoom: 19 }).setView([41.08, 28.99], 13);
 const markerLayer = L.markerClusterGroup({
   chunkedLoading: true,
-  maxClusterRadius: 48,
+  maxClusterRadius: (zoom) => zoom <= 6 ? 120 : zoom <= 8 ? 78 : 48,
   showCoverageOnHover: false,
   iconCreateFunction: (cluster) => L.divIcon({
     className: 'station-cluster',
@@ -110,17 +110,6 @@ function render() {
   ));
   if (currentPosition) visible.sort((a, b) => distanceKm(currentPosition, a) - distanceKm(currentPosition, b));
   if (!visible.some(({ id }) => id === selected)) { selected = null; detailOpen = false; }
-  $('#result-count').textContent = `${visible.length} istasyon`;
-
-  const listed = visible.slice(0, MAX_LIST_RESULTS);
-  const overflowNote = visible.length > MAX_LIST_RESULTS
-    ? `<div class="list-limit">İlk ${MAX_LIST_RESULTS} sonuç gösteriliyor. Aramayı daraltarak diğer istasyonlara ulaşabilirsin.</div>`
-    : '';
-  $('#station-list').innerHTML = visible.length
-    ? `${listed.map(card).join('')}${overflowNote}`
-    : '<div class="empty">Bu filtrelere uygun istasyon bulunamadı.<br/>Başka bir arama yapabilir veya filtreleri temizleyebilirsin.<br/><button id="clear-filters">Filtreleri temizle</button></div>';
-  document.querySelectorAll('.station-card').forEach((button) => button.addEventListener('click', () => selectStation(button.dataset.id)));
-  $('#clear-filters')?.addEventListener('click', resetFilters);
 
   markerLayer.clearLayers();
   markers.clear();
@@ -137,7 +126,26 @@ function render() {
     return marker;
   });
   markerLayer.addLayers(nextMarkers);
+  renderViewportList();
   renderDetail();
+}
+
+function renderViewportList() {
+  const bounds = mapReady ? map.getBounds().pad(0.01) : null;
+  const inView = countryOverview || !bounds ? visible : visible.filter(({ lat, lng }) => bounds.contains([lat, lng]));
+  const listed = inView.slice(0, MAX_LIST_RESULTS);
+  $('#result-count').textContent = `${inView.length} istasyon`;
+  if (currentRegionSlug === 'all' && !currentPosition) {
+    $('#map-region-name').textContent = `${countryOverview ? 'Türkiye geneli' : 'Harita alanı'} · ${inView.length.toLocaleString('tr')} istasyon`;
+  }
+  const overflowNote = inView.length > MAX_LIST_RESULTS
+    ? `<div class="list-limit">Bu harita alanındaki ilk ${MAX_LIST_RESULTS} sonuç gösteriliyor. Yakınlaştırarak diğer istasyonlara ulaşabilirsin.</div>`
+    : '';
+  $('#station-list').innerHTML = inView.length
+    ? `${listed.map(card).join('')}${overflowNote}`
+    : '<div class="empty">Bu harita alanında filtrelere uygun istasyon bulunamadı.<br/>Haritayı hareket ettirebilir veya filtreleri temizleyebilirsin.<br/><button id="clear-filters">Filtreleri temizle</button></div>';
+  document.querySelectorAll('.station-card').forEach((button) => button.addEventListener('click', () => selectStation(button.dataset.id)));
+  $('#clear-filters')?.addEventListener('click', resetFilters);
 }
 
 function applyDatasetMeta(meta) {
@@ -156,9 +164,10 @@ function populateRegions() {
 }
 
 function setRegionLabels(region) {
-  $('#city-intro').textContent = `${region.name} şarj noktalarını keşfet.`;
-  $('#region-heading').textContent = region.name;
-  $('#map-region-name').textContent = `${region.name}, Türkiye`;
+  const nationwide = region.slug === 'all';
+  $('#city-intro').textContent = nationwide ? 'Türkiye genelindeki şarj noktalarını keşfet.' : `${region.name} ve çevresindeki şarj noktalarını keşfet.`;
+  $('#region-heading').textContent = 'Haritadaki istasyonlar';
+  $('#map-region-name').textContent = nationwide ? 'Türkiye geneli' : `${region.name}, Türkiye`;
 }
 
 function clearFiltersWithoutRendering({ preserveSearch = false } = {}) {
@@ -186,13 +195,14 @@ function showLocationStatus(message) {
   });
 }
 
-function fitMapToVisible() {
-  if (!visible.length) return;
-  if (visible.length === 1) {
-    map.setView([visible[0].lat, visible[0].lng], 14);
+function fitMapToStations(targetStations = visible) {
+  if (!targetStations.length) return;
+  mapReady = true;
+  if (targetStations.length === 1) {
+    map.setView([targetStations[0].lat, targetStations[0].lng], 14);
     return;
   }
-  map.fitBounds(visible.map(({ lat, lng }) => [lat, lng]), {
+  map.fitBounds(targetStations.map(({ lat, lng }) => [lat, lng]), {
     paddingTopLeft: window.matchMedia('(max-width:760px)').matches ? [50, 70] : [490, 90],
     paddingBottomRight: [90, 120],
     maxZoom: 14,
@@ -201,69 +211,29 @@ function fitMapToVisible() {
 
 function updateRegionUrl(slug, replace = false) {
   const url = new URL(window.location.href);
-  url.searchParams.set('sehir', slug);
+  if (slug === 'all') url.searchParams.delete('sehir');
+  else url.searchParams.set('sehir', slug);
   window.history[replace ? 'replaceState' : 'pushState']({ region: slug }, '', url);
-}
-
-async function fetchRegion(region) {
-  if (!regionCache.has(region.slug)) {
-    regionCache.set(region.slug, fetch(region.href).then(async (response) => {
-      if (!response.ok) throw new Error(`Station bundle returned ${response.status}`);
-      const payload = await response.json();
-      if (payload.schemaVersion !== 1 || payload.region?.slug !== region.slug || !Array.isArray(payload.stations)) throw new Error('Unsupported station bundle');
-      return payload;
-    }).catch((error) => {
-      regionCache.delete(region.slug);
-      throw error;
-    }));
-  }
-  return regionCache.get(region.slug);
 }
 
 async function loadRegion(slug, { updateUrl = true, replaceUrl = false, preserveSearch = false, preserveLocation = false, fitMap = true } = {}) {
   const region = regions.find((candidate) => candidate.slug === slug);
-  if (!region) return;
-  const request = ++regionRequest;
+  if (!region) return false;
   if (!preserveLocation) clearUserLocation();
   $('#region-select').value = region.slug;
-  $('#region-select').disabled = true;
-  $('#result-count').textContent = 'Yükleniyor…';
-  $('#station-list').innerHTML = `<div class="empty"><strong>${escapeHtml(region.name)} istasyonları yükleniyor…</strong></div>`;
-  markerLayer.clearLayers();
-  markers.clear();
-  stations = [];
   selected = null;
   detailOpen = false;
-  renderDetail();
-  try {
-    const payload = await fetchRegion(region);
-    if (request !== regionRequest) return;
-    stations = payload.stations;
-    currentRegionSlug = region.slug;
-    applyDatasetMeta(payload.meta);
-    clearFiltersWithoutRendering({ preserveSearch });
-    populateOperators();
-    setRegionLabels(region);
-    render();
-    if (fitMap) fitMapToVisible();
-    if (updateUrl) updateRegionUrl(region.slug, replaceUrl);
-    return true;
-  } catch (error) {
-    if (request !== regionRequest) return;
-    console.error('Station data could not be loaded', error);
-    $('#result-count').textContent = 'Veri yüklenemedi';
-    $('#station-list').innerHTML = `<div class="empty"><strong>${escapeHtml(region.name)} istasyonları yüklenemedi.</strong><br/>Başka bir şehir seçebilir veya tekrar deneyebilirsin.<br/><button id="retry-region">Tekrar dene</button></div>`;
-    $('#retry-region').addEventListener('click', () => loadRegion(region.slug, { updateUrl: false }));
-    return false;
-  } finally {
-    if (request === regionRequest) $('#region-select').disabled = false;
+  currentRegionSlug = region.slug;
+  countryOverview = region.slug === 'all' && fitMap;
+  clearFiltersWithoutRendering({ preserveSearch });
+  setRegionLabels(region);
+  render();
+  if (fitMap) {
+    const target = region.slug === 'all' ? visible : visible.filter(({ citySlug }) => citySlug === region.slug);
+    fitMapToStations(target);
   }
-}
-
-function loadRegionAtMapCenter() {
-  const center = map.getCenter();
-  const region = regionAtPosition({ lat: center.lat, lng: center.lng }, regions);
-  if (region && region.slug !== currentRegionSlug) loadRegion(region.slug, { fitMap: false });
+  if (updateUrl) updateRegionUrl(region.slug, replaceUrl);
+  return true;
 }
 
 async function locateUser() {
@@ -308,13 +278,17 @@ async function locateUser() {
 
 async function initializeRegions() {
   try {
-    const response = await fetch('/data/manifest.json');
-    if (!response.ok) throw new Error(`Region manifest returned ${response.status}`);
-    const manifest = await response.json();
+    const [manifestResponse, stationsResponse] = await Promise.all([fetch('/data/manifest.json'), fetch('/data/stations.json')]);
+    if (!manifestResponse.ok) throw new Error(`Region manifest returned ${manifestResponse.status}`);
+    if (!stationsResponse.ok) throw new Error(`Nationwide station bundle returned ${stationsResponse.status}`);
+    const [manifest, nationwide] = await Promise.all([manifestResponse.json(), stationsResponse.json()]);
     if (manifest.schemaVersion !== 1 || !Array.isArray(manifest.regions) || !manifest.regions.length) throw new Error('Unsupported region manifest');
-    regions = manifest.regions;
-    applyDatasetMeta(manifest.meta);
+    if (nationwide.schemaVersion !== 1 || !Array.isArray(nationwide.stations)) throw new Error('Unsupported nationwide station bundle');
+    stations = nationwide.stations;
+    regions = [{ slug: 'all', name: 'Türkiye geneli', count: manifest.totalStations }, ...manifest.regions];
+    applyDatasetMeta(nationwide.meta);
     populateRegions();
+    populateOperators();
     const requestedSlug = new URLSearchParams(window.location.search).get('sehir');
     const initialSlug = regionSlugFromSearch(window.location.search, regions);
     await loadRegion(initialSlug, { updateUrl: requestedSlug !== initialSlug, replaceUrl: true });
@@ -365,17 +339,26 @@ $('#filters-button').addEventListener('click', () => {
   $('#filters-button').setAttribute('aria-expanded', String(!expanded));
   $('#extra-filters').hidden = expanded;
 });
-$('#zoom-in').addEventListener('click', () => map.zoomIn());
-$('#zoom-out').addEventListener('click', () => map.zoomOut());
+$('#zoom-in').addEventListener('click', () => { userMapNavigation = true; map.zoomIn(); });
+$('#zoom-out').addEventListener('click', () => { userMapNavigation = true; map.zoomOut(); });
 $('#locate-me').addEventListener('click', locateUser);
 $('#locate-me-list').addEventListener('click', locateUser);
 $('#mobile-toggle').addEventListener('click', () => setMapMode(!$('.workspace').classList.contains('map-mode')));
 const mapContainer = map.getContainer();
 ['pointerdown', 'wheel', 'touchstart', 'keydown'].forEach((eventName) => mapContainer.addEventListener(eventName, () => { userMapNavigation = true; }, { passive: true }));
 map.on('moveend', () => {
-  if (!userMapNavigation) return;
-  userMapNavigation = false;
-  loadRegionAtMapCenter();
+  if (userMapNavigation) {
+    userMapNavigation = false;
+    countryOverview = false;
+    if (currentRegionSlug !== 'all' || currentPosition) {
+      clearUserLocation();
+      currentRegionSlug = 'all';
+      $('#region-select').value = 'all';
+      setRegionLabels(regions[0]);
+      updateRegionUrl('all');
+    }
+  }
+  renderViewportList();
 });
 $('#about-button').addEventListener('click', () => $('#about-dialog').showModal());
 document.querySelectorAll('#about-dialog .dialog-close, .dialog-done').forEach((button) => button.addEventListener('click', () => $('#about-dialog').close()));

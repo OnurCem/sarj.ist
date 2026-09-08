@@ -22,19 +22,19 @@ See [the data pipeline documentation](docs/data-pipeline.md) for the response co
 
 ## Features
 
-- Responsive Turkish interface with clustered map and station-list views across all available provinces.
+- Responsive Turkish interface with a nationwide clustered map and station-list views across all available provinces.
 - Search by province, district, station name, and operator; typing a province moves the map without requiring the dropdown.
-- Automatic province loading when the user pans or zooms the map into another region.
+- A Turkey-wide default view whose clusters and viewport counts include stations from every visible province.
 - Optional browser geolocation that focuses the map and sorts nearby stations by distance.
 - AC/DC, operator, and private-access filters.
 - Static pages for cities and individual stations.
 - Canonical metadata, sitemap, and robots directives.
 - Keyboard focus styles, reduced-motion support, and map error states.
-- Province selection with URL-addressable views and regional JSON bundles, so the browser loads one city at a time.
+- Optional province selection with URL-addressable focus views; the nationwide map keeps neighboring provinces visible.
 - Visible EPDK attribution and refresh date when production data is loaded.
 - External Google Maps directions for production station coordinates.
 
-The home map currently opens with İstanbul. Map tiles are provided by OpenStreetMap, and web fonts are loaded from Google Fonts; those resources require an internet connection.
+The home map opens with a Turkey-wide overview. Map tiles are provided by OpenStreetMap, and web fonts are loaded from Google Fonts; those resources require an internet connection.
 
 ## Run locally
 
@@ -68,7 +68,7 @@ npm run import:epdk -- --input path/to/epdk-response.json --min-count 10000
 - `npm run dev` — prepare local data and start the development server.
 - `npm test` — run the EPDK client, adapter, import, and reconciliation tests.
 - `npm run validate:data` — validate the active normalized station dataset.
-- `npm run prepare:data` — generate the city manifest and regional browser bundles.
+- `npm run prepare:data` — generate the nationwide map bundle, city manifest, and regional bundles.
 - `npm run build` — validate data, generate bundles, and build the static site into `dist/`.
 - `npm run fetch:epdk` — make one guarded request to the EPDK service.
 - `npm run import:epdk` — normalize and reconcile a previously saved response.
