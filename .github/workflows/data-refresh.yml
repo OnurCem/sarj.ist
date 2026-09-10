@@ -1,9 +1,15 @@
-name: EPDK data refresh
+name: Production refresh and deploy
 
 on:
   schedule:
     - cron: '17 2 * * *'
   workflow_dispatch:
+    inputs:
+      bootstrap:
+        description: Initialize an empty R2 state bucket (first deployment only)
+        required: true
+        default: false
+        type: boolean
 
 concurrency:
   group: epdk-data-refresh
@@ -13,9 +19,14 @@ permissions:
   contents: read
 
 jobs:
-  refresh:
+  refresh-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    environment: production
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_STATE_BUCKET: ${{ vars.CLOUDFLARE_STATE_BUCKET }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -23,7 +34,42 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Fetch and reconcile EPDK snapshot
-        run: npm run sync:epdk
+
+      - name: Restore private reconciliation state
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.bootstrap }}" == "true" ]]; then
+            node scripts/cloudflare-state.mjs restore --bootstrap
+          else
+            node scripts/cloudflare-state.mjs restore
+          fi
+
+      - name: Fetch one EPDK snapshot
+        id: epdk-fetch
+        run: npm run fetch:epdk
+
+      - name: Persist the hourly fetch guard
+        if: ${{ always() && steps.epdk-fetch.outcome != 'skipped' }}
+        run: node scripts/cloudflare-state.mjs publish-fetch-state
+
+      - name: Reconcile the validated snapshot
+        run: npm run import:epdk -- --input data/raw/epdk-latest.json
+
       - run: npm test
       - run: npm run build
+      - run: npm run check:deployment
+
+      - name: Deploy the complete static build
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+
+      - name: Smoke-test the deployed station data
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: npm run smoke:deployment -- "$DEPLOYMENT_URL"
+
+      - name: Publish validated reconciliation state
+        run: node scripts/cloudflare-state.mjs publish-validated-state

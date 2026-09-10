@@ -73,7 +73,9 @@ npm run import:epdk -- --input path/to/epdk-response.json --min-count 10000
 - `npm run fetch:epdk` — make one guarded request to the EPDK service.
 - `npm run import:epdk` — normalize and reconcile a previously saved response.
 
-GitHub Actions runs tests and the production build for pushes and pull requests. The scheduled EPDK verification workflow has read-only repository permissions and does not commit or upload station snapshots.
+GitHub Actions runs tests and the production build for pushes and pull requests. The production workflow restores private reconciliation state from Cloudflare R2, performs one guarded EPDK refresh, deploys a complete Cloudflare Workers Static Assets build, and updates private state only after the deployed data passes smoke tests. It does not commit or upload station snapshots to GitHub.
+
+See [the production deployment guide](docs/deployment.md) for the required Cloudflare resources, GitHub environment configuration, first-run bootstrap, failure behavior, and local dry-run commands.
 
 ## Project structure
 

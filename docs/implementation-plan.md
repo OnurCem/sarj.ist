@@ -14,7 +14,7 @@
 - Astro and TypeScript generate station detail and city pages as static HTML.
 - A React component contains the Leaflet map, search, filters, cards, and detail drawer so these controls share state.
 - Cloudflare Workers Static Assets serves the generated site and compact regional station data directly.
-- A daily GitHub Actions job fetches and validates EPDK data, enriches province/district assignments, builds the site, and deploys a complete successful build.
+- A daily GitHub Actions job restores private reconciliation state from Cloudflare R2, fetches and validates EPDK data, builds the site, deploys a complete Workers Static Assets build, and smoke-tests the release.
 - Defer Supabase and runtime database queries until features need persistent user data or server-side querying.
 - Browser-side filtering and clustering operate on compact data loaded by region; do not send the full source response on initial load.
 
@@ -34,7 +34,7 @@ Astro is confirmed. The hosting and data-delivery design above is the current re
 - Keep generated assets within Cloudflare Free limits; bundle regional data instead of generating a second data file for every station.
 - Validate the EPDK response envelope and record counts before publishing. Reject malformed or suspiciously incomplete imports and retain the previous deployment.
 - Reconcile socket removals and use repeated valid snapshots before treating missing stations as removed. Persist the previous validated snapshot and comparison metadata for this purpose.
-- Monitor missing successful scheduled runs as well as explicit failures.
+- Monitor missing successful scheduled runs as well as explicit failures. Explicit failures are covered by GitHub Actions; a separate missing-run monitor remains required.
 - Choose a licensed administrative-boundary dataset and a tile service whose usage policy fits the application.
 - Verify EPDK authentication, rate limits, and data-reuse terms. Attribution and enrichment alone do not settle reuse permission.
 - Configure Google Analytics consent behavior and privacy disclosures.

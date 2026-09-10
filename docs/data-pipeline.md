@@ -40,9 +40,9 @@ Thresholds can be changed explicitly with `--min-count`, `--max-invalid-rate`, `
 
 On success, writes use a temporary sibling followed by an atomic rename. The prior active dataset is saved to `data/history/stations.previous.json`, pending-removal evidence is saved to `data/import-state.json`, and `data/stations.json` becomes the new local publishable snapshot. All three paths are ignored by Git.
 
-## Still required before production
+## Production safeguards
 
 - Confirm attribution and data-reuse permission before publishing the fetched records.
-- Choose a deployment-time data source that does not store the station snapshot in GitHub.
+- Configure the private Cloudflare R2 state bucket and GitHub production environment described in [the deployment guide](deployment.md).
 
-The scheduled GitHub workflow runs daily at 05:17 Europe/Istanbul time. It allows only one concurrent refresh, applies every quality gate, and runs tests plus the production build with read-only repository permissions. Its fetched snapshot exists only for the duration of that runner and is not committed or uploaded as an artifact.
+The scheduled GitHub workflow runs daily at 05:17 Europe/Istanbul time. It allows only one concurrent refresh, restores prior validation state from R2, applies every quality gate, deploys one complete static build, smoke-tests it, and then publishes the next private state. The fetched raw snapshot exists only for the duration of that runner and is not committed or uploaded as an artifact.

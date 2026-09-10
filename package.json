@@ -10,6 +10,9 @@
     "fetch:epdk": "node scripts/fetch-epdk.mjs",
     "import:epdk": "node scripts/import-epdk.mjs",
     "sync:epdk": "npm run fetch:epdk && npm run import:epdk -- --input data/raw/epdk-latest.json",
+    "check:deployment": "node scripts/check-deployment-size.mjs",
+    "deploy:dry-run": "npm run build && npm run check:deployment && wrangler deploy --dry-run",
+    "smoke:deployment": "node scripts/smoke-deployment.mjs",
     "test": "node --test",
     "build": "npm run validate:data && npm run prepare:data && astro build",
     "preview": "astro preview --host 127.0.0.1"
@@ -18,5 +21,8 @@
     "astro": "^7.3.1",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3"
+  },
+  "devDependencies": {
+    "wrangler": "^4.129.1"
   }
 }
