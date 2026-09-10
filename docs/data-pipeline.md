@@ -1,6 +1,6 @@
 # Station data ingestion
 
-The application reads its generated active dataset from the ignored file `data/stations.json`. A downloaded EPDK response is not required for local development: on a clean clone, the data preparation scripts copy the tracked design fixtures from `data/stations.sample.json` into that path. EPDK station snapshots, import state, history, and raw responses must never be committed or pushed to GitHub.
+The application reads its generated active dataset from the ignored file `data/stations.json`. A downloaded EPDK response is not required for local development: on a clean clone, the data preparation scripts copy the tracked sample fixture from `data/stations.sample.json` into that path. EPDK station snapshots, import state, history, and raw responses must never be committed or pushed to GitHub.
 
 ## Import a saved response
 
@@ -24,7 +24,7 @@ npm run sync:epdk
 
 The adapter recognizes a root array or a nested array below `stations`, `chargingStations`, `sarjIstasyonlari`, `istasyonlar`, `items`, `results`, `result`, or `data`. A declared `totalCount`, `total`, `recordCount`, or `kayitSayisi` must match the array length; this prevents publishing one page from a paginated response as a full snapshot.
 
-Provider fields are isolated in `scripts/lib/epdk-adapter.mjs`. It currently covers common English and Turkish aliases for stable ID, station name, operator, province/city, district, address, coordinates, access, charger type, power, and socket count. Update and test this adapter against the real response before the first production import.
+Provider fields are isolated in `scripts/lib/epdk-adapter.mjs`. It covers the EPDK response fields and common English and Turkish aliases for stable ID, station name, operator, province/city, district, address, coordinates, access, charger type, power, and socket count.
 
 ## Publication gates
 
@@ -40,9 +40,6 @@ Thresholds can be changed explicitly with `--min-count`, `--max-invalid-rate`, `
 
 On success, writes use a temporary sibling followed by an atomic rename. The prior active dataset is saved to `data/history/stations.previous.json`, pending-removal evidence is saved to `data/import-state.json`, and `data/stations.json` becomes the new local publishable snapshot. All three paths are ignored by Git.
 
-## Production safeguards
+## Production operation
 
-- Confirm attribution and data-reuse permission before publishing the fetched records.
-- Configure the private Cloudflare R2 state bucket and GitHub production environment described in [the deployment guide](deployment.md).
-
-The scheduled GitHub workflow runs daily at 05:17 Europe/Istanbul time. It allows only one concurrent refresh, restores prior validation state from R2, applies every quality gate, deploys one complete static build, smoke-tests it, and then publishes the next private state. The fetched raw snapshot exists only for the duration of that runner and is not committed or uploaded as an artifact.
+The private Cloudflare R2 bucket and GitHub `production` environment are described in [the deployment guide](deployment.md). The scheduled workflow runs daily at 05:17 Europe/Istanbul time. It allows only one concurrent refresh, restores prior validation state from R2, applies every quality gate, deploys one complete static build, smoke-tests it, and then publishes the next private state. The fetched raw snapshot exists only for the duration of that runner and is not committed or uploaded as an artifact.

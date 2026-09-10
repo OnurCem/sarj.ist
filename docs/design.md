@@ -1,43 +1,43 @@
-# şarj.ist design direction
+# Product and interface design
 
-The interface helps a driver compare nearby charging options without promising live socket availability. The map and station list are the main experience, with no landing-page step.
+şarj.ist helps drivers find registered electric-vehicle charging stations across Turkey. The primary experience combines a searchable station list with a nationwide map; there is no introductory landing page between the user and the map.
 
-## Identity
+## Visual identity
 
-The mark combines a compact lightning stroke with a detached cedilla, referencing the Turkish “ş”. A rounded forest-green tile keeps the symbol recognizable at app-icon size. The lowercase wordmark feels approachable; the quieter `.ist` connects it to its web address. The standalone symbol is vector geometry. The wordmark uses a system sans-serif fallback and can be outlined in a vector editor before print production.
+The interface uses an angular charging-cable mark and a lowercase `şarj.ist` wordmark. The symbol is electric yellow on dark surfaces and remains recognizable at favicon size.
 
-- Forest `#193B35`: text, selected filters, primary map markers.
-- Electric lime `#D5F36B`: selected map marker and principal actions.
-- Leaf `#719454`: AC markers, with an accompanying socket icon and text so color is never the only distinction.
-- White `#FFFFFF`: working surfaces.
-- Pale green `#F3F7E9`: selected station card.
-- Manrope: headings and interface wordmark. DM Sans: controls and supporting text.
+- Header: `#131612`
+- Panels: `#1B2019`
+- Raised controls: `#252C21`
+- Selected rows: `#303A22`
+- Electric yellow accent: `#E3FF48`
+- Primary text: `#F1F4E9`
+- Secondary text: `#B4BCAA`
+- Manrope: headings and wordmark
+- DM Sans: controls and supporting text
 
-Keep at least one quarter of the symbol’s width clear around it. Use the app mark at 24 px or larger. For small favicons use the symbol alone. Prefer the one-color mark where lime cannot reproduce clearly.
+Electric yellow identifies the logo, primary actions, selected navigation, and DC markers. AC markers use a separate outlined treatment with text and a socket symbol, so charging type is not communicated by color alone. The standard OpenStreetMap daylight tiles remain unfiltered for readable roads and place labels.
 
-## Main flow
+## Interaction model
 
-1. Search or filter by charging type. Public access is the default; private stations require explicit inclusion.
-2. Compare operator, location, power and socket count in the result list. Power is capacity, not availability.
-3. Select a result or map marker to inspect details. On mobile this reveals the map with the detail sheet.
-4. In the production experience, continue to external navigation after real station coordinates are connected.
+The default view shows all of Turkey. Marker clusters and result counts represent every station inside the current viewport, including stations from multiple provinces.
 
-Desktop uses a fixed-width result panel beside a fluid map. Mobile starts with the searchable list and provides an anchored map/list toggle. No location permission is requested on entry.
+- Search matches province, district, station name, and operator.
+- Selecting a province is optional and focuses the map without excluding neighboring provinces.
+- Browser geolocation is requested only after a user action and focuses nearby stations.
+- AC/DC, operator, and private-access controls filter the visible results.
+- Selecting a station opens its details and an external navigation link.
+- Mobile uses a list-first layout with a persistent map/list toggle.
 
-## Production handoff
+The interface displays EPDK's last successful refresh date and explicitly states that availability, pricing, and operating status are not live.
 
-Connect validated EPDK records and show their last successful refresh timestamp. Replace example labels only when real data is available. Implement the planned static station/city routes, regional data loading and marker clustering. Validate the full supplied station snapshot and production map provider separately. The design prototype includes eight sample records to demonstrate filtering and detail states.
+## Accessibility
 
-Before release, conduct browser and assistive-technology testing at desktop/mobile sizes and 200% text enlargement. Confirm branding availability before treating the concept as a registered identity.
+Controls have visible keyboard focus, reduced-motion support, text labels for icon actions, and status messages for location and map failures. Primary action text has a 15.18:1 calculated sRGB contrast ratio; secondary text on selected rows has a 6.11:1 ratio. These checks support the palette specification but do not replace full assistive-technology testing.
 
-## Palette alternatives
+## Brand assets
 
-The comparison sheet in `palette-options.svg` shows five complete directions using the same interface anatomy:
+- `public/brand/mark.svg` — active standalone mark and CSS mask source.
+- `public/favicon.svg` — square browser icon using the current dark/yellow identity.
 
-- **01 Bordo / pudra** — current direction; editorial and warm.
-- **02 Orman / limon** — natural, energetic, and strongly associated with charging.
-- **03 Grafit / kayısı** — urban, active, and high contrast.
-- **04 Gece / lavanta** — technical, calm, and premium.
-- **05 Patlıcan / gül** — expressive and distinctive.
-
-The prototype remains on 01 until you choose a palette.
+Keep at least one quarter of the symbol's width clear around the standalone mark. Use the symbol alone where the complete wordmark would be illegible.

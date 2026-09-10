@@ -4,7 +4,7 @@ Production is designed for Cloudflare Workers Static Assets. Every release uploa
 
 ## Cloudflare resources
 
-Create one private R2 bucket for refresh continuity:
+The private `sarj-ist-state` R2 bucket provides refresh continuity. It was created with:
 
 ```sh
 npx wrangler r2 bucket create sarj-ist-state
@@ -20,17 +20,17 @@ The raw EPDK response is deliberately excluded. It exists only in the temporary 
 
 ## GitHub production environment
 
-Create a GitHub environment named `production`, then configure:
+The GitHub environment is named `production` and contains:
 
 - Secret `CLOUDFLARE_ACCOUNT_ID`.
 - Secret `CLOUDFLARE_API_TOKEN`, scoped to deploy the Worker and read/write the state bucket.
 - Variable `CLOUDFLARE_STATE_BUCKET` with value `sarj-ist-state` (or the chosen bucket name).
 
-Keep production approvals enabled on the environment if releases should require a human review. Cloudflare credentials are read only from GitHub's encrypted secret store and must not be added to `.env`, Wrangler configuration, source files, or workflow logs.
+Cloudflare credentials are read only from GitHub's encrypted secret store and must not be added to `.env`, Wrangler configuration, source files, or workflow logs.
 
-## First deployment
+## Bootstrap and recovery
 
-Run **Production refresh and deploy** manually with `bootstrap` enabled. Bootstrap is intentionally explicit: it skips state restoration once, makes one guarded EPDK request, validates and builds the application, deploys it, smoke-tests the public data, then seeds the private R2 state.
+For a new or empty state bucket, run **Production refresh and deploy** manually with `bootstrap` enabled. Bootstrap skips state restoration once, makes one guarded EPDK request, validates and builds the application, deploys it, smoke-tests the public data, then seeds the private R2 state.
 
 Do not enable bootstrap again after a successful first release. Normal manual and scheduled runs require all three state objects to exist and fail closed if any cannot be restored.
 
@@ -58,7 +58,7 @@ Build and validate the Cloudflare upload without contacting EPDK or publishing a
 npm run deploy:dry-run
 ```
 
-The preflight counts deployable files separately from Wrangler's recursive directory-entry message. The current real-data build contains 16,932 files, leaving 3,068 files below the 20,000-file Workers Free limit. The workflow fails before deployment if a future station-data build crosses the free-plan file-count or 25 MiB per-file limit. Hashed application assets are cached immutably; station bundles use a five-minute browser cache with stale-while-revalidate coverage for refreshes.
+The preflight counts deployable files separately from Wrangler's recursive directory-entry message. The workflow fails before deployment if a station-data build crosses the Workers Free file-count or 25 MiB per-file limit. Hashed application assets are cached immutably; station bundles use a five-minute browser cache with stale-while-revalidate coverage for refreshes.
 
 Smoke-test an existing HTTPS deployment:
 
@@ -66,4 +66,4 @@ Smoke-test an existing HTTPS deployment:
 npm run smoke:deployment -- https://example.workers.dev
 ```
 
-The Worker name and static routing behavior are declared in `wrangler.jsonc`. Attach `sarj.ist` as a custom domain in Cloudflare only after the first `workers.dev` deployment passes its smoke test.
+The Worker name and static routing behavior are declared in `wrangler.jsonc`. Production is available at `https://sarj.ist`; the `workers.dev` hostname remains the deployment fallback and smoke-test target.

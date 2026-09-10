@@ -75,7 +75,7 @@ npm run import:epdk -- --input path/to/epdk-response.json --min-count 10000
 
 GitHub Actions runs tests and the production build for pushes and pull requests. The production workflow restores private reconciliation state from Cloudflare R2, performs one guarded EPDK refresh, deploys a complete Cloudflare Workers Static Assets build, and updates private state only after the deployed data passes smoke tests. It does not commit or upload station snapshots to GitHub.
 
-See [the production deployment guide](docs/deployment.md) for the required Cloudflare resources, GitHub environment configuration, first-run bootstrap, failure behavior, and local dry-run commands.
+See [the production deployment guide](docs/deployment.md) for Cloudflare resources, GitHub environment configuration, recovery behavior, and local dry-run commands.
 
 ## Project structure
 
@@ -85,4 +85,7 @@ See [the production deployment guide](docs/deployment.md) for the required Cloud
 - `scripts/lib/epdk-client.mjs` — guarded network client and response validation.
 - `scripts/import-epdk.mjs` — atomic import and reconciliation command.
 - `data/stations.sample.json` — illustrative development fixture.
-- `docs/` — implementation, design, and data-pipeline documentation.
+- `docs/architecture.md` — current application and delivery architecture.
+- `docs/design.md` — final product, interaction, and visual design specification.
+- `docs/data-pipeline.md` — EPDK ingestion and reconciliation behavior.
+- `docs/deployment.md` — Cloudflare and GitHub Actions operations.
