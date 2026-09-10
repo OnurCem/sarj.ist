@@ -10,6 +10,11 @@ on:
         required: true
         default: false
         type: boolean
+      recovery_url:
+        description: Recover bootstrap state from an already validated deployment without contacting EPDK
+        required: false
+        default: ''
+        type: string
 
 concurrency:
   group: epdk-data-refresh
@@ -36,6 +41,7 @@ jobs:
       - run: npm ci
 
       - name: Restore private reconciliation state
+        if: ${{ inputs.recovery_url == '' }}
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.bootstrap }}" == "true" ]]; then
             node scripts/cloudflare-state.mjs restore --bootstrap
@@ -44,6 +50,7 @@ jobs:
           fi
 
       - name: Fetch one EPDK snapshot
+        if: ${{ inputs.recovery_url == '' }}
         id: epdk-fetch
         run: npm run fetch:epdk
 
@@ -52,13 +59,17 @@ jobs:
         run: node scripts/cloudflare-state.mjs publish-fetch-state
 
       - name: Reconcile the validated snapshot
+        if: ${{ inputs.recovery_url == '' }}
         run: npm run import:epdk -- --input data/raw/epdk-latest.json
 
       - run: npm test
-      - run: npm run build
-      - run: npm run check:deployment
+      - if: ${{ inputs.recovery_url == '' }}
+        run: npm run build
+      - if: ${{ inputs.recovery_url == '' }}
+        run: npm run check:deployment
 
       - name: Deploy the complete static build
+        if: ${{ inputs.recovery_url == '' }}
         id: deploy
         uses: cloudflare/wrangler-action@v4
         with:
@@ -67,9 +78,21 @@ jobs:
           command: deploy
 
       - name: Smoke-test the deployed station data
+        if: ${{ inputs.recovery_url == '' }}
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
         run: npm run smoke:deployment -- "$DEPLOYMENT_URL"
 
       - name: Publish validated reconciliation state
+        if: ${{ inputs.recovery_url == '' }}
+        run: node scripts/cloudflare-state.mjs publish-validated-state
+
+      - name: Recover bootstrap state from the validated deployment
+        if: ${{ inputs.recovery_url != '' }}
+        env:
+          RECOVERY_URL: ${{ inputs.recovery_url }}
+        run: npm run recover:deployment-state -- "$RECOVERY_URL"
+
+      - name: Publish recovered bootstrap state
+        if: ${{ inputs.recovery_url != '' }}
         run: node scripts/cloudflare-state.mjs publish-validated-state

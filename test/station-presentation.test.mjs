@@ -3,6 +3,7 @@ import test from 'node:test';
 import { closestRegion, datasetPresentation, distanceKm, escapeHtml, mapHref, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch } from '../src/lib/station-presentation.mjs';
 import { r2Arguments, STATE_OBJECTS } from '../scripts/cloudflare-state.mjs';
 import { validateDeployment } from '../scripts/smoke-deployment.mjs';
+import { buildBootstrapState } from '../scripts/bootstrap-state-from-deployment.mjs';
 import { validateDeploymentSize } from '../scripts/check-deployment-size.mjs';
 
 test('keeps sample datasets clearly marked as illustrative', () => {
@@ -75,6 +76,20 @@ test('accepts only a complete production deployment in smoke validation', () => 
   const nationwide = { schemaVersion: 1, meta: { isSample: false, refreshedAt: '2026-09-08T00:00:00Z' }, stations: Array.from({ length: 10_001 }, (_, id) => ({ id })) };
   assert.equal(validateDeployment({ html: '<title>şarj.ist</title>', manifest, nationwide }).stationCount, 10_001);
   assert.throws(() => validateDeployment({ html: '<title>şarj.ist</title>', manifest, nationwide: { ...nationwide, meta: { isSample: true } } }), /sample data/);
+});
+
+test('recovers reconciliation state from an already validated deployment', () => {
+  const nationwide = {
+    meta: { isSample: false, refreshedAt: '2026-09-10T12:20:58.906Z' },
+    stations: [{ id: 'station-1' }, { id: 'station-2' }],
+  };
+  const { dataset, state } = buildBootstrapState(nationwide);
+  assert.deepEqual(dataset, nationwide);
+  assert.deepEqual(state.missing, {});
+  assert.deepEqual(state.socketDecreases, {});
+  assert.deepEqual(state.lastReport.added, ['station-1', 'station-2']);
+  assert.equal(state.lastReport.publishedCount, 2);
+  assert.throws(() => buildBootstrapState({ ...nationwide, stations: [{ id: 'duplicate' }, { id: 'duplicate' }] }), /duplicate/);
 });
 
 test('guards the Cloudflare free static-asset limits', () => {

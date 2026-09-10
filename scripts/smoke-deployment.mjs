@@ -15,17 +15,39 @@ async function fetchChecked(url, type) {
   return type === 'json' ? response.json() : response.text();
 }
 
+const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+export async function fetchDeploymentSnapshot(target, { attempts = 6, initialDelayMs = 1_000 } = {}) {
+  const base = new URL(target);
+  if (base.protocol !== 'https:') throw new Error('Deployment smoke tests require an HTTPS URL');
+  let lastError;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const [html, manifest, nationwide] = await Promise.all([
+        fetchChecked(new URL('/', base), 'text'),
+        fetchChecked(new URL('/data/manifest.json', base), 'json'),
+        fetchChecked(new URL('/data/stations.json', base), 'json'),
+      ]);
+      const health = validateDeployment({ html, manifest, nationwide });
+      return { base, html, manifest, nationwide, health };
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) break;
+      const delayMs = Math.min(initialDelayMs * (2 ** (attempt - 1)), 10_000);
+      console.warn(`Deployment not ready (attempt ${attempt}/${attempts}): ${error.message}; retrying in ${delayMs}ms`);
+      await wait(delayMs);
+    }
+  }
+
+  throw lastError;
+}
+
 async function main() {
   const target = process.argv[2] ?? process.env.DEPLOYMENT_URL;
   if (!target) throw new Error('Usage: node scripts/smoke-deployment.mjs https://deployment.example');
-  const base = new URL(target);
-  if (base.protocol !== 'https:') throw new Error('Deployment smoke tests require an HTTPS URL');
-  const [html, manifest, nationwide] = await Promise.all([
-    fetchChecked(new URL('/', base), 'text'),
-    fetchChecked(new URL('/data/manifest.json', base), 'json'),
-    fetchChecked(new URL('/data/stations.json', base), 'json'),
-  ]);
-  console.log(JSON.stringify({ status: 'healthy', url: base.origin, ...validateDeployment({ html, manifest, nationwide }) }, null, 2));
+  const { base, health } = await fetchDeploymentSnapshot(target);
+  console.log(JSON.stringify({ status: 'healthy', url: base.origin, ...health }, null, 2));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -34,6 +34,8 @@ Run **Production refresh and deploy** manually with `bootstrap` enabled. Bootstr
 
 Do not enable bootstrap again after a successful first release. Normal manual and scheduled runs require all three state objects to exist and fail closed if any cannot be restored.
 
+Smoke tests retry briefly after Wrangler reports success because a new `workers.dev` deployment can take a few seconds to propagate. If the upload succeeds but the initial smoke test still exhausts its retries, run the workflow with `bootstrap` disabled and `recovery_url` set to that deployment's HTTPS URL. Recovery validates the already-published nationwide bundle, reconstructs the initial reconciliation state, and writes it to R2 without making another EPDK request or redeploying the site.
+
 ## Normal refresh
 
 At 05:17 Europe/Istanbul each day, the workflow:
