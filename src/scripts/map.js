@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldShowStationList } from '../lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -278,6 +278,16 @@ async function locateUser() {
   }
 }
 
+async function locateUserIfGranted() {
+  if (!navigator.geolocation || !navigator.permissions?.query) return;
+  try {
+    const permission = await navigator.permissions.query({ name: 'geolocation' });
+    if (shouldAutoLocate(permission.state)) await locateUser();
+  } catch {
+    // Permission queries are not supported consistently; the location buttons remain available.
+  }
+}
+
 async function initializeRegions() {
   try {
     const [manifestResponse, stationsResponse] = await Promise.all([fetch('/data/manifest.json'), fetch('/data/stations.json')]);
@@ -294,11 +304,13 @@ async function initializeRegions() {
     const requestedSlug = new URLSearchParams(window.location.search).get('sehir');
     const initialSlug = regionSlugFromSearch(window.location.search, regions);
     await loadRegion(initialSlug, { updateUrl: requestedSlug !== initialSlug, replaceUrl: true });
+    return true;
   } catch (error) {
     console.error('Station regions could not be loaded', error);
     $('#region-select').disabled = true;
     $('#result-count').textContent = 'Veri yüklenemedi';
     $('#station-list').innerHTML = '<div class="empty"><strong>Şehir listesi yüklenemedi.</strong><br/>Lütfen sayfayı yenileyerek tekrar dene.</div>';
+    return false;
   }
 }
 
@@ -378,7 +390,9 @@ window.addEventListener('popstate', () => {
   const slug = regionSlugFromSearch(window.location.search, regions);
   if (slug && slug !== currentRegionSlug) loadRegion(slug, { updateUrl: false });
 });
-initializeRegions();
+initializeRegions().then((loaded) => {
+  if (loaded) locateUserIfGranted();
+});
 
 // Optional agent interface: it shares the same filtering state as the UI.
 if (document.modelContext?.registerTool) {

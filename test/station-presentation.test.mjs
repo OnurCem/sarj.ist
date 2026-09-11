@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, mapHref, MIN_STATION_LIST_ZOOM, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldShowStationList } from '../src/lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, mapHref, MIN_STATION_LIST_ZOOM, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList } from '../src/lib/station-presentation.mjs';
 import { r2Arguments, STATE_OBJECTS } from '../scripts/cloudflare-state.mjs';
 import { validateDeployment } from '../scripts/smoke-deployment.mjs';
 import { buildHealthDocument, validateHealthDocument } from '../scripts/lib/deployment-health.mjs';
@@ -46,6 +46,13 @@ test('shows viewport station rows only at a useful local zoom level', () => {
   assert.equal(shouldShowStationList(10), true);
   assert.equal(shouldShowStationList(14), true);
   assert.equal(shouldShowStationList(Number.NaN), false);
+});
+
+test('automatically uses location only when permission is already granted', () => {
+  assert.equal(shouldAutoLocate('granted'), true);
+  assert.equal(shouldAutoLocate('prompt'), false);
+  assert.equal(shouldAutoLocate('denied'), false);
+  assert.equal(shouldAutoLocate(undefined), false);
 });
 
 test('escapes external station content before rendering HTML', () => {

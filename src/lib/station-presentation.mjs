@@ -47,6 +47,10 @@ export function shouldShowStationList(zoom) {
   return Number.isFinite(zoom) && zoom >= MIN_STATION_LIST_ZOOM;
 }
 
+export function shouldAutoLocate(permissionState) {
+  return permissionState === 'granted';
+}
+
 export function mapHref(citySlug) {
   return `/?sehir=${encodeURIComponent(citySlug)}`;
 }
