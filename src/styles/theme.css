@@ -40,7 +40,7 @@ body,.workspace,.map-region,.leaflet-container { background: var(--header); colo
 .station-card:after { background: var(--line); }
 .station-card:hover { background: var(--raised); }
 .station-card.selected { background: var(--selected); border-left-color: var(--accent); }
-.station-list { scrollbar-color: var(--control-line) transparent; }
+.search-section,.station-list { scrollbar-color: var(--control-line) transparent; }
 .operator-mark,.operator-mark.eşarj,.operator-mark.trugo,.operator-mark.voltrun { background: var(--header); color: var(--accent); border-color: var(--line); box-shadow: none; }
 .station-power,.detail-specs svg,.detail-specs>div:nth-child(2) svg { color: var(--accent); }
 .station-power.ac { color: var(--ink); }
@@ -52,6 +52,7 @@ body,.workspace,.map-region,.leaflet-container { background: var(--header); colo
 .charger-pin.ac { background: #333c2e; color: var(--ink); border-color: #a7b19a; }
 .charger-pin.ac:after { border-color: #a7b19a; }
 .charger-pin.chosen { box-shadow: 0 0 0 10px #e3ff4825, 0 0 0 20px #e3ff4812, 0 4px 12px #0005; }
+.station-cluster { background: var(--surface); color: var(--accent); border-color: var(--accent); }
 .map-legend i { background: var(--accent); box-shadow: none; }
 .map-legend .ac-dot { background: #333c2e; box-shadow: 0 0 0 1px #a7b19a; }
 /* Keep the standard daylight map legible against the dark application chrome. */

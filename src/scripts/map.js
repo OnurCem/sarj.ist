@@ -356,6 +356,7 @@ $('#filters-button').addEventListener('click', () => {
   const expanded = $('#filters-button').getAttribute('aria-expanded') === 'true';
   $('#filters-button').setAttribute('aria-expanded', String(!expanded));
   $('#extra-filters').hidden = expanded;
+  if (!expanded) requestAnimationFrame(() => $('#extra-filters').scrollIntoView({ block: 'nearest' }));
 });
 $('#zoom-in').addEventListener('click', () => { userMapNavigation = true; map.zoomIn(); });
 $('#zoom-out').addEventListener('click', () => { userMapNavigation = true; map.zoomOut(); });
