@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+---
+<BaseLayout
+  title="Gizlilik ve KVKK aydınlatma metni | şarj.ist"
+  description="şarj.ist ziyaretçilerine yönelik gizlilik ve kişisel verilerin işlenmesi hakkında aydınlatma metni."
+  canonicalPath="/privacy/"
+>
+  <SiteHeader />
+  <main class="content-page legal-page">
+    <a class="back-link" href="/">← Haritaya dön</a>
+    <header class="legal-heading">
+      <p class="page-kicker">Yasal bilgiler</p>
+      <h1>Gizlilik ve KVKK aydınlatma metni</h1>
+      <p>Bu metin, şarj.ist'i ziyaret ettiğinizde kişisel verilerinizin nasıl işlendiğini açıklar.</p>
+    </header>
+
+    <section>
+      <h2>Veri sorumlusu</h2>
+      <p>6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında veri sorumlusu Onur Cem Şenel'dir.</p>
+    </section>
+
+    <section>
+      <h2>İşlenen veriler ve amaçları</h2>
+      <p>Siteye eriştiğinizde IP adresi, istek zamanı, istenen adres ve tarayıcıya ilişkin temel teknik bilgiler; sayfaların sunulması, hizmet güvenliğinin sağlanması ve teknik sorunların giderilmesi amacıyla barındırma altyapısı tarafından işlenebilir.</p>
+      <p>“Konumuma yakın istasyonlar” özelliğini kullandığınızda tarayıcınızın sağladığı konum yalnızca cihazınızda, yakındaki istasyonları sıralamak ve haritayı konumunuza yaklaştırmak amacıyla işlenir. Konum şarj.ist tarafından kaydedilmez.</p>
+    </section>
+
+    <section>
+      <h2>Hukuki sebepler</h2>
+      <p>Site erişimine ilişkin zorunlu teknik veriler, Kanun'un 5. maddesinin ikinci fıkrasının (f) bendindeki meşru menfaat hukuki sebebine dayanılarak işlenir. Konum bilgisi ise yalnızca özelliği kullanmayı seçmeniz ve tarayıcı izni vermeniz üzerine işlenir.</p>
+    </section>
+
+    <section>
+      <h2>Hizmet sağlayıcılar</h2>
+      <p>Site Cloudflare altyapısında barındırılır. Cloudflare, sitenin sunulması ve güvenliğinin sağlanması sırasında IP adresi ve bağlantı kayıtları gibi teknik verileri işleyebilir.</p>
+      <p>Yazı tipleri Google Fonts üzerinden, harita görselleri ise OpenStreetMap sunucularından yüklenir. Tarayıcınız bu kaynakları almak için ilgili hizmetlerle doğrudan bağlantı kurar ve bu sırada IP adresiniz ile temel istek bilgileri ilgili hizmetler tarafından görülebilir.</p>
+      <ul>
+        <li><a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare Gizlilik Politikası</a></li>
+        <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Gizlilik Politikası</a></li>
+        <li><a href="https://osmfoundation.org/wiki/Privacy_Policy" target="_blank" rel="noopener noreferrer">OpenStreetMap Vakfı Gizlilik Politikası</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Veri kaynağı</h2>
+      <p>Şarj istasyonu bilgileri Enerji Piyasası Düzenleme Kurumu (EPDK) verilerinden hazırlanır. şarj.ist bağımsız bir bilgi hizmetidir ve EPDK'nın resmi sitesi değildir. İstasyon kayıtları anlık müsaitlik, fiyat veya çalışma durumu bilgisi içermez.</p>
+    </section>
+
+    <section>
+      <h2>Çerezler ve kullanıcı hesabı</h2>
+      <p>şarj.ist kullanıcı hesabı oluşturmaz ve analitik veya reklam amacıyla çerez yerleştirmez.</p>
+    </section>
+
+    <section>
+      <h2>Saklama</h2>
+      <p>şarj.ist konum bilginizi veya bir kullanıcı profili kaydetmez. Barındırma altyapısındaki zorunlu güvenlik ve erişim kayıtları, hizmet sağlayıcının geçerli saklama süreleri boyunca tutulabilir.</p>
+    </section>
+
+    <section>
+      <h2>Haklarınız</h2>
+      <p>Kanun'un 11. maddesi kapsamında kişisel verilerinizin işlenip işlenmediğini öğrenme, işlenmişse bilgi talep etme, işleme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme, verilerin aktarıldığı kişileri bilme, şartları oluştuğunda düzeltme veya silme isteme, otomatik analiz sonucuna itiraz etme ve hukuka aykırı işleme nedeniyle zarara uğramanız hâlinde giderim talep etme haklarına sahipsiniz.</p>
+    </section>
+
+    <p class="legal-updated">Son güncelleme: 11 Eylül 2026</p>
+  </main>
+</BaseLayout>
