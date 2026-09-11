@@ -34,6 +34,7 @@ test('builds encoded navigation links from station coordinates', () => {
 test('sorts unique operators and creates compact badge labels', () => {
   assert.deepEqual(operatorNames([{ operator: 'Zes' }, { operator: 'Eşarj' }, { operator: 'Zes' }]), ['Eşarj', 'Zes']);
   assert.equal(operatorBadgeLabel('Zes'), 'zes');
+  assert.equal(operatorBadgeLabel('oncharge'), 'oncharge');
   assert.equal(operatorBadgeLabel('Örnek Enerji Sanayi ve Ticaret Anonim Şirketi'), 'ÖE');
 });
 

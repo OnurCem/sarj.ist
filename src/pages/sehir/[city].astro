@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
 import { dataset, stations, type Station } from '../../data/stations';
-import { datasetPresentation } from '../../lib/station-presentation.mjs';
+import { datasetPresentation, operatorBadgeLabel } from '../../lib/station-presentation.mjs';
 
 export function getStaticPaths() {
   const cities = [...new Map(stations.map((station) => [station.citySlug, station.city])).entries()];
@@ -25,7 +25,7 @@ const dataView = datasetPresentation(dataset);
     <div class="city-station-list">
       {cityStations.map((station) => (
         <a class="city-station-row" href={`/istasyon/${station.slug}/`}>
-          <span class="operator-mark">{station.operator.toLocaleLowerCase('tr')}</span>
+          <span class="operator-mark" aria-label={station.operator} title={station.operator}>{operatorBadgeLabel(station.operator)}</span>
           <span class="city-station-copy"><strong>{station.name}</strong><small>{station.area}</small></span>
           <span class="city-station-power"><strong>{station.type} {station.power} kW</strong><small>{station.sockets} soket</small></span>
           <span aria-hidden="true">→</span>

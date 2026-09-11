@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
 import { dataset, stations, type Station } from '../../data/stations';
-import { datasetPresentation, navigationUrl } from '../../lib/station-presentation.mjs';
+import { datasetPresentation, navigationUrl, operatorBadgeLabel } from '../../lib/station-presentation.mjs';
 
 export function getStaticPaths() {
   return stations.map((station) => ({ params: { slug: station.slug }, props: { station } }));
@@ -19,7 +19,7 @@ const dataView = datasetPresentation(dataset);
     <a class="back-link" href={`/?sehir=${station.citySlug}`}>← {station.city} haritasına dön</a>
     <article class="station-page">
       <div class="page-heading">
-        <span class="operator-mark">{station.operator.toLocaleLowerCase('tr')}</span>
+        <span class="operator-mark" aria-label={station.operator} title={station.operator}>{operatorBadgeLabel(station.operator)}</span>
         <div>
           <p class="page-kicker">{station.operator} · {station.access}</p>
           <h1>{station.name}</h1>
