@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, mapHref, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch } from '../src/lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, mapHref, MIN_STATION_LIST_ZOOM, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldShowStationList } from '../src/lib/station-presentation.mjs';
 import { r2Arguments, STATE_OBJECTS } from '../scripts/cloudflare-state.mjs';
 import { validateDeployment } from '../scripts/smoke-deployment.mjs';
 import { buildHealthDocument, validateHealthDocument } from '../scripts/lib/deployment-health.mjs';
@@ -38,6 +38,14 @@ test('sorts unique operators and keeps complete badge labels', () => {
   assert.equal(operatorBadgeLabel('Wat Mobilite'), 'Wat Mobilite');
   assert.equal(operatorBadgeLabel('INTERDATA'), 'INTERDATA');
   assert.equal(operatorBadgeLabel('Örnek Enerji Sanayi ve Ticaret Anonim Şirketi'), 'Örnek Enerji Sanayi ve Ticaret Anonim Şirketi');
+});
+
+test('shows viewport station rows only at a useful local zoom level', () => {
+  assert.equal(MIN_STATION_LIST_ZOOM, 10);
+  assert.equal(shouldShowStationList(9), false);
+  assert.equal(shouldShowStationList(10), true);
+  assert.equal(shouldShowStationList(14), true);
+  assert.equal(shouldShowStationList(Number.NaN), false);
 });
 
 test('escapes external station content before rendering HTML', () => {

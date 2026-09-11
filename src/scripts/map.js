@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch } from '../lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldShowStationList } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -133,11 +133,15 @@ function render() {
 function renderViewportList() {
   const bounds = mapReady ? map.getBounds().pad(0.01) : null;
   const inView = countryOverview || !bounds ? visible : visible.filter(({ lat, lng }) => bounds.contains([lat, lng]));
-  const listed = inView.slice(0, MAX_LIST_RESULTS);
   $('#result-count').textContent = `${inView.length} istasyon`;
   if (currentRegionSlug === 'all' && !currentPosition) {
     $('#map-region-name').textContent = `${countryOverview ? 'Türkiye geneli' : 'Harita alanı'} · ${inView.length.toLocaleString('tr')} istasyon`;
   }
+  if (!mapReady || !shouldShowStationList(map.getZoom())) {
+    $('#station-list').innerHTML = '<div class="empty station-list-zoom-hint"><strong>Listeyi görmek için haritayı yakınlaştır.</strong></div>';
+    return;
+  }
+  const listed = inView.slice(0, MAX_LIST_RESULTS);
   const overflowNote = inView.length > MAX_LIST_RESULTS
     ? `<div class="list-limit">Bu harita alanındaki ilk ${MAX_LIST_RESULTS} sonuç gösteriliyor. Yakınlaştırarak diğer istasyonlara ulaşabilirsin.</div>`
     : '';

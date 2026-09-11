@@ -41,6 +41,12 @@ export function operatorBadgeLabel(operator) {
   return String(operator).trim();
 }
 
+export const MIN_STATION_LIST_ZOOM = 10;
+
+export function shouldShowStationList(zoom) {
+  return Number.isFinite(zoom) && zoom >= MIN_STATION_LIST_ZOOM;
+}
+
 export function mapHref(citySlug) {
   return `/?sehir=${encodeURIComponent(citySlug)}`;
 }
