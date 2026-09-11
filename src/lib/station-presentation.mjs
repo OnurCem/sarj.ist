@@ -51,6 +51,13 @@ export function shouldAutoLocate(permissionState) {
   return permissionState === 'granted';
 }
 
+export function locationZoomLevel(accuracyMeters) {
+  if (!Number.isFinite(accuracyMeters) || accuracyMeters < 0) return 13;
+  if (accuracyMeters <= 100) return 15;
+  if (accuracyMeters <= 1_000) return 14;
+  return 13;
+}
+
 export function mapHref(citySlug) {
   return `/?sehir=${encodeURIComponent(citySlug)}`;
 }

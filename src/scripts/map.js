@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList } from '../lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -255,9 +255,10 @@ async function locateUser() {
     const coordinates = { lat: position.coords.latitude, lng: position.coords.longitude };
     const region = closestRegion(coordinates, regions);
     if (!region) throw new Error('Yakın şehir bulunamadı');
-    const loaded = await loadRegion(region.slug, { preserveLocation: true });
+    const loaded = await loadRegion(region.slug, { preserveLocation: true, fitMap: false });
     if (!loaded) throw new Error('Yakındaki istasyonlar yüklenemedi');
     currentPosition = coordinates;
+    if (userLocationMarker) map.removeLayer(userLocationMarker);
     userLocationMarker = L.marker([coordinates.lat, coordinates.lng], {
       icon: L.divIcon({ className: 'user-location-marker', iconSize: [18, 18], iconAnchor: [9, 9] }),
       title: 'Konumun',
@@ -266,10 +267,13 @@ async function locateUser() {
       zIndexOffset: 2000,
     }).addTo(map);
     render();
-    map.setView([coordinates.lat, coordinates.lng], 13);
+    if (window.matchMedia('(max-width:760px)').matches) {
+      setMapMode(true);
+      map.invalidateSize({ pan: false });
+    }
+    map.setView([coordinates.lat, coordinates.lng], locationZoomLevel(position.coords.accuracy), { animate: false });
     $('#map-region-name').textContent = `Konumun · ${region.name}`;
     showLocationStatus(`${region.name} çevresindeki istasyonlar yakınlığa göre sıralandı.`);
-    if (window.matchMedia('(max-width:760px)').matches) setMapMode(true);
   } catch (error) {
     const denied = error?.code === 1;
     showLocationStatus(denied ? 'Konum izni verilmedi. Şehir adını arayabilir veya listeden seçebilirsin.' : 'Konum alınamadı. Şehir adını arayabilir veya listeden seçebilirsin.');

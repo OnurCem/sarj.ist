@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, mapHref, MIN_STATION_LIST_ZOOM, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList } from '../src/lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, mapHref, MIN_STATION_LIST_ZOOM, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList } from '../src/lib/station-presentation.mjs';
 import { r2Arguments, STATE_OBJECTS } from '../scripts/cloudflare-state.mjs';
 import { validateDeployment } from '../scripts/smoke-deployment.mjs';
 import { buildHealthDocument, validateHealthDocument } from '../scripts/lib/deployment-health.mjs';
@@ -53,6 +53,16 @@ test('automatically uses location only when permission is already granted', () =
   assert.equal(shouldAutoLocate('prompt'), false);
   assert.equal(shouldAutoLocate('denied'), false);
   assert.equal(shouldAutoLocate(undefined), false);
+});
+
+test('chooses a useful map zoom from location accuracy', () => {
+  assert.equal(locationZoomLevel(25), 15);
+  assert.equal(locationZoomLevel(100), 15);
+  assert.equal(locationZoomLevel(101), 14);
+  assert.equal(locationZoomLevel(1_000), 14);
+  assert.equal(locationZoomLevel(1_001), 13);
+  assert.equal(locationZoomLevel(undefined), 13);
+  assert.equal(locationZoomLevel(-1), 13);
 });
 
 test('escapes external station content before rendering HTML', () => {
