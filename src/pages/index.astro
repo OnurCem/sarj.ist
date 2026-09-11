@@ -5,7 +5,7 @@ import { datasetPresentation } from '../lib/station-presentation.mjs';
 
 const dataView = datasetPresentation(dataset);
 ---
-<BaseLayout title="şarj.ist — Şarjını bul. Yoluna bak." description="Türkiye'deki elektrikli araç şarj istasyonlarını keşfet. Harita, soket ve operatör filtreleriyle şarj durağını bul.">
+<BaseLayout title="şarj.ist — Şarj noktaları, tek haritada." description="Türkiye'deki elektrikli araç şarj istasyonlarını keşfet. Harita, soket ve operatör filtreleriyle şarj durağını bul.">
     <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <symbol id="socket" viewBox="0 0 24 24"><path d="M7 3h10l4 6-3 11H6L3 9Z"/><circle cx="9" cy="8" r="1"/><circle cx="15" cy="8" r="1"/><circle cx="8" cy="13" r="1"/><circle cx="16" cy="13" r="1"/><circle cx="12" cy="16" r="1"/></symbol><symbol id="plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol><symbol id="minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></symbol>
       <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
@@ -26,7 +26,7 @@ const dataView = datasetPresentation(dataset);
       <aside class="sidebar" aria-label="İstasyon arama ve sonuçları">
         <section class="search-section">
           
-          <h1>Şarjını bul.<br/>Yoluna bak.</h1>
+          <h1>Şarj noktaları,<br/>tek haritada.</h1>
           <p id="city-intro">Türkiye genelindeki şarj noktalarını keşfet.</p>
           <label class="searchbox"><svg><use href="#search"/></svg><input id="search-input" type="search" placeholder="Şehir, ilçe, istasyon veya operatör ara" aria-label="Haritada istasyon ara"/></label>
           <label class="city-picker"><span>Şehir (isteğe bağlı)</span><select id="region-select" aria-label="İsteğe bağlı şehir seçimi"><option value="all">Türkiye geneli</option></select></label>
@@ -49,6 +49,6 @@ const dataView = datasetPresentation(dataset);
       </section>
       <button id="mobile-toggle" class="mobile-toggle"><svg><use href="#pin"/></svg><span>Haritayı göster</span></button>
     </main>
-    <dialog id="about-dialog"><button class="dialog-close" aria-label="Kapat"><svg><use href="#close"/></svg></button><div class="dialog-brand" aria-label="şarj.ist"><span class="dialog-brand-mark" aria-hidden="true"></span><span>şarj<span class="brand-light">.ist</span></span></div><h2>Şarj durağını bul.<br/>Yoluna devam et.</h2><p>İstasyonları haritada keşfet, AC veya DC şarj türüne göre filtrele ve bir istasyon seçerek detaylarını gör.</p><p id="about-data-copy">{dataView.about}</p><button class="primary dialog-done">Keşfetmeye başla <svg><use href="#arrow"/></svg></button></dialog>
+    <dialog id="about-dialog"><button class="dialog-close" aria-label="Kapat"><svg><use href="#close"/></svg></button><div class="dialog-brand" aria-label="şarj.ist"><span class="dialog-brand-mark" aria-hidden="true"></span><span>şarj<span class="brand-light">.ist</span></span></div><h2>Şarj noktaları,<br/>tek haritada.</h2><p>İstasyonları haritada keşfet, AC veya DC şarj türüne göre filtrele ve bir istasyon seçerek detaylarını gör.</p><p id="about-data-copy">{dataView.about}</p><button class="primary dialog-done">Keşfetmeye başla <svg><use href="#arrow"/></svg></button></dialog>
     <script src="../scripts/map.js"></script>
 </BaseLayout>
