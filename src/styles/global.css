@@ -52,5 +52,10 @@ dialog{border:1px solid #eee2e8;border-radius:22px;padding:34px;max-width:460px;
 .station-distance{color:var(--ink);font-weight:600;white-space:nowrap}
 @media(max-width:760px){.city-picker{margin-top:10px}.city-grid{grid-template-columns:1fr}.city-card{padding:18px}.city-card-actions{white-space:normal}.location-status{left:0;right:auto;width:min(270px,calc(100vw - 78px))}}
 
-/* Text badges keep a consistent height while expanding to fit the operator label. */
-.operator-mark,.detail-top .operator-mark,.page-heading .operator-mark,.city-station-row .operator-mark{width:auto}
+/* Text badges expand for complete operator names and wrap only when space is limited. */
+.operator-mark,.detail-top .operator-mark,.page-heading .operator-mark,.city-station-row .operator-mark{width:fit-content;height:auto;min-height:48px;max-width:120px;padding:8px 10px;white-space:normal;overflow-wrap:anywhere;text-align:center;line-height:1.15}
+.detail-top .operator-mark{min-height:45px;max-width:180px}
+.page-heading .operator-mark{min-height:64px;max-width:280px}
+.city-station-row .operator-mark{max-width:180px}
+@media(max-width:1100px){.detail-top .operator-mark{max-width:120px}}
+@media(max-width:760px){.operator-mark{max-width:110px}.detail-top .operator-mark{max-width:160px}.page-heading .operator-mark{min-height:52px;max-width:150px}.city-station-row .operator-mark{max-width:120px}}

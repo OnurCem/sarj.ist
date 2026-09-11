@@ -31,11 +31,13 @@ test('builds encoded navigation links from station coordinates', () => {
   assert.throws(() => navigationUrl({ lat: Number.NaN, lng: 29.04 }), /finite numbers/);
 });
 
-test('sorts unique operators and creates compact badge labels', () => {
+test('sorts unique operators and keeps complete badge labels', () => {
   assert.deepEqual(operatorNames([{ operator: 'Zes' }, { operator: 'Eşarj' }, { operator: 'Zes' }]), ['Eşarj', 'Zes']);
-  assert.equal(operatorBadgeLabel('Zes'), 'zes');
+  assert.equal(operatorBadgeLabel('Zes'), 'Zes');
   assert.equal(operatorBadgeLabel('oncharge'), 'oncharge');
-  assert.equal(operatorBadgeLabel('Örnek Enerji Sanayi ve Ticaret Anonim Şirketi'), 'ÖE');
+  assert.equal(operatorBadgeLabel('Wat Mobilite'), 'Wat Mobilite');
+  assert.equal(operatorBadgeLabel('INTERDATA'), 'INTERDATA');
+  assert.equal(operatorBadgeLabel('Örnek Enerji Sanayi ve Ticaret Anonim Şirketi'), 'Örnek Enerji Sanayi ve Ticaret Anonim Şirketi');
 });
 
 test('escapes external station content before rendering HTML', () => {

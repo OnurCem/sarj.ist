@@ -38,11 +38,7 @@ export function operatorNames(stations) {
 }
 
 export function operatorBadgeLabel(operator) {
-  const name = String(operator).trim();
-  if (name.length <= 8) return name.toLocaleLowerCase('tr');
-  const ignored = new Set(['anonim', 'limited', 'şirketi', 'ticaret', 'sanayi', 've']);
-  const initials = name.split(/\s+/).filter((word) => !ignored.has(word.toLocaleLowerCase('tr'))).slice(0, 3).map((word) => word[0]).join('');
-  return (initials || name.slice(0, 3)).toLocaleUpperCase('tr');
+  return String(operator).trim();
 }
 
 export function mapHref(citySlug) {
