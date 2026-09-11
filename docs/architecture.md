@@ -9,6 +9,7 @@
 - Per-province JSON bundles support regional access and future loading optimizations.
 - Leaflet marker clustering, viewport counts, search, filters, geolocation, and station details run in the browser.
 - Cloudflare serves the generated `dist/` directory at `https://sarj.ist` and the fallback `workers.dev` hostname.
+- The generated `/health.json` endpoint exposes only aggregate deployment and data-freshness metadata.
 - The application has no runtime database or application server.
 
 ## Station data
@@ -32,5 +33,7 @@ GitHub Actions runs tests and a production build on pushes and pull requests. Th
 7. Publishes the new private state only after the deployment passes.
 
 The workflow runs once each day at 05:17 Europe/Istanbul and allows only one concurrent refresh. A failed refresh leaves the previous successful deployment and private state active.
+
+An independent hourly workflow checks the homepage, data manifest, and health endpoint at the custom domain. It does not call EPDK or read R2. The check fails if the public dataset is inconsistent or more than 48 hours old.
 
 See [Production deployment](deployment.md) for operational configuration and recovery commands.

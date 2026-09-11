@@ -5,6 +5,11 @@ on:
     - cron: '17 2 * * *'
   workflow_dispatch:
     inputs:
+      refresh_data:
+        description: Fetch fresh EPDK data before deploying (disable for code-only releases)
+        required: true
+        default: true
+        type: boolean
       bootstrap:
         description: Initialize an empty R2 state bucket (first deployment only)
         required: true
@@ -41,6 +46,7 @@ jobs:
       - run: npm ci
 
       - name: Restore private reconciliation state
+        id: restore
         if: ${{ inputs.recovery_url == '' }}
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.bootstrap }}" == "true" ]]; then
@@ -50,7 +56,7 @@ jobs:
           fi
 
       - name: Fetch one EPDK snapshot
-        if: ${{ inputs.recovery_url == '' }}
+        if: ${{ inputs.recovery_url == '' && (github.event_name == 'schedule' || inputs.refresh_data || inputs.bootstrap) }}
         id: epdk-fetch
         run: npm run fetch:epdk
 
@@ -59,13 +65,17 @@ jobs:
         run: node scripts/cloudflare-state.mjs publish-fetch-state
 
       - name: Reconcile the validated snapshot
-        if: ${{ inputs.recovery_url == '' }}
+        id: reconcile
+        if: ${{ inputs.recovery_url == '' && (github.event_name == 'schedule' || inputs.refresh_data || inputs.bootstrap) }}
         run: npm run import:epdk -- --input data/raw/epdk-latest.json
 
-      - run: npm test
+      - id: tests
+        run: npm test
       - if: ${{ inputs.recovery_url == '' }}
+        id: build
         run: npm run build
       - if: ${{ inputs.recovery_url == '' }}
+        id: preflight
         run: npm run check:deployment
 
       - name: Deploy the complete static build
@@ -79,12 +89,14 @@ jobs:
 
       - name: Smoke-test the deployed station data
         if: ${{ inputs.recovery_url == '' }}
+        id: smoke
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
         run: npm run smoke:deployment -- "$DEPLOYMENT_URL"
 
       - name: Publish validated reconciliation state
         if: ${{ inputs.recovery_url == '' }}
+        id: publish
         run: node scripts/cloudflare-state.mjs publish-validated-state
 
       - name: Recover bootstrap state from the validated deployment
@@ -96,3 +108,32 @@ jobs:
       - name: Publish recovered bootstrap state
         if: ${{ inputs.recovery_url != '' }}
         run: node scripts/cloudflare-state.mjs publish-validated-state
+
+      - name: Write production refresh summary
+        if: ${{ always() }}
+        env:
+          RESTORE_OUTCOME: ${{ steps.restore.outcome }}
+          FETCH_OUTCOME: ${{ steps.epdk-fetch.outcome }}
+          RECONCILE_OUTCOME: ${{ steps.reconcile.outcome }}
+          TEST_OUTCOME: ${{ steps.tests.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          PREFLIGHT_OUTCOME: ${{ steps.preflight.outcome }}
+          DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
+          SMOKE_OUTCOME: ${{ steps.smoke.outcome }}
+          PUBLISH_OUTCOME: ${{ steps.publish.outcome }}
+        run: |
+          {
+            echo "## Production refresh"
+            echo
+            echo "| Stage | Result |"
+            echo "| --- | --- |"
+            echo "| Restore private state | ${RESTORE_OUTCOME} |"
+            echo "| Fetch EPDK snapshot | ${FETCH_OUTCOME} |"
+            echo "| Reconcile data | ${RECONCILE_OUTCOME} |"
+            echo "| Tests | ${TEST_OUTCOME} |"
+            echo "| Build | ${BUILD_OUTCOME} |"
+            echo "| Deployment preflight | ${PREFLIGHT_OUTCOME} |"
+            echo "| Deploy | ${DEPLOY_OUTCOME} |"
+            echo "| Public smoke test | ${SMOKE_OUTCOME} |"
+            echo "| Publish private state | ${PUBLISH_OUTCOME} |"
+          } >> "$GITHUB_STEP_SUMMARY"

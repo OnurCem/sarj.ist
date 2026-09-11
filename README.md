@@ -33,6 +33,7 @@ See [the data pipeline documentation](docs/data-pipeline.md) for the response co
 - Optional province selection with URL-addressable focus views; the nationwide map keeps neighboring provinces visible.
 - Visible EPDK attribution and refresh date when production data is loaded.
 - External Google Maps directions for production station coordinates.
+- Public aggregate health metadata and hourly production monitoring with EPDK data-freshness checks.
 
 The home map opens with a Turkey-wide overview. Map tiles are provided by OpenStreetMap, and web fonts are loaded from Google Fonts; those resources require an internet connection.
 
@@ -72,6 +73,7 @@ npm run import:epdk -- --input path/to/epdk-response.json --min-count 10000
 - `npm run build` — validate data, generate bundles, and build the static site into `dist/`.
 - `npm run fetch:epdk` — make one guarded request to the EPDK service.
 - `npm run import:epdk` — normalize and reconcile a previously saved response.
+- `npm run monitor:production` — verify the public site and reject EPDK data older than 48 hours without contacting EPDK.
 
 GitHub Actions runs tests and the production build for pushes and pull requests. The production workflow restores private reconciliation state from Cloudflare R2, performs one guarded EPDK refresh, deploys a complete Cloudflare Workers Static Assets build, and updates private state only after the deployed data passes smoke tests. It does not commit or upload station snapshots to GitHub.
 

@@ -3,6 +3,7 @@ import test from 'node:test';
 import { closestRegion, datasetPresentation, distanceKm, escapeHtml, mapHref, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch } from '../src/lib/station-presentation.mjs';
 import { r2Arguments, STATE_OBJECTS } from '../scripts/cloudflare-state.mjs';
 import { validateDeployment } from '../scripts/smoke-deployment.mjs';
+import { buildHealthDocument, validateHealthDocument } from '../scripts/lib/deployment-health.mjs';
 import { buildBootstrapState } from '../scripts/bootstrap-state-from-deployment.mjs';
 import { validateDeploymentSize } from '../scripts/check-deployment-size.mjs';
 
@@ -72,10 +73,29 @@ test('builds explicit remote R2 commands for private refresh state', () => {
 });
 
 test('accepts only a complete production deployment in smoke validation', () => {
-  const manifest = { schemaVersion: 1, totalStations: 10_001, regions: Array.from({ length: 81 }, (_, index) => ({ slug: `city-${index}` })) };
+  const refreshedAt = '2026-09-08T00:00:00Z';
+  const manifest = { schemaVersion: 1, meta: { refreshedAt }, totalStations: 10_001, regions: Array.from({ length: 81 }, (_, index) => ({ slug: `city-${index}` })) };
   const nationwide = { schemaVersion: 1, meta: { isSample: false, refreshedAt: '2026-09-08T00:00:00Z' }, stations: Array.from({ length: 10_001 }, (_, id) => ({ id })) };
-  assert.equal(validateDeployment({ html: '<title>şarj.ist</title>', manifest, nationwide }).stationCount, 10_001);
-  assert.throws(() => validateDeployment({ html: '<title>şarj.ist</title>', manifest, nationwide: { ...nationwide, meta: { isSample: true } } }), /sample data/);
+  const health = { schemaVersion: 1, status: 'ok', service: 'sarj.ist', generatedAt: refreshedAt, commit: 'abc123', data: { source: 'EPDK', isSample: false, refreshedAt, stationCount: 10_001, regionCount: 81 } };
+  assert.equal(validateDeployment({ html: '<title>şarj.ist</title>', manifest, nationwide, health }).stationCount, 10_001);
+  assert.equal(validateDeployment({ html: '<title>şarj.ist</title>', manifest, nationwide }, { requireHealth: false }).stationCount, 10_001);
+  assert.throws(() => validateDeployment({ html: '<title>şarj.ist</title>', manifest, nationwide: { ...nationwide, meta: { isSample: true } }, health }), /sample data/);
+});
+
+test('builds aggregate health metadata without exposing station records', () => {
+  const stations = [{ citySlug: 'istanbul' }, { citySlug: 'ankara' }, { citySlug: 'istanbul' }];
+  const health = buildHealthDocument({ meta: { isSample: false, refreshedAt: '2026-09-11T07:20:00Z' }, stations, commit: 'abc123', generatedAt: '2026-09-11T07:21:00Z' });
+  assert.deepEqual(health.data, { source: 'EPDK', isSample: false, refreshedAt: '2026-09-11T07:20:00Z', stationCount: 3, regionCount: 2 });
+  assert.equal(JSON.stringify(health).includes('citySlug'), false);
+});
+
+test('rejects stale or inconsistent production health metadata', () => {
+  const refreshedAt = '2026-09-11T07:20:00Z';
+  const health = { schemaVersion: 1, status: 'ok', service: 'sarj.ist', generatedAt: '2026-09-11T07:21:00Z', commit: 'abc123', data: { source: 'EPDK', isSample: false, refreshedAt, stationCount: 10_001, regionCount: 81 } };
+  const manifest = { schemaVersion: 1, meta: { refreshedAt }, totalStations: 10_001, regions: Array.from({ length: 81 }) };
+  assert.equal(validateHealthDocument(health, { manifest, maxDataAgeHours: 48, now: Date.parse('2026-09-12T07:20:00Z') }).stationCount, 10_001);
+  assert.throws(() => validateHealthDocument(health, { manifest, maxDataAgeHours: 48, now: Date.parse('2026-09-14T07:20:00Z') }), /stale/);
+  assert.throws(() => validateHealthDocument(health, { manifest: { ...manifest, totalStations: 10_002 } }), /station count/);
 });
 
 test('recovers reconciliation state from an already validated deployment', () => {

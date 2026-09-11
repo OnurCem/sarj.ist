@@ -13,6 +13,7 @@
     "check:deployment": "node scripts/check-deployment-size.mjs",
     "deploy:dry-run": "npm run build && npm run check:deployment && wrangler deploy --dry-run",
     "smoke:deployment": "node scripts/smoke-deployment.mjs",
+    "monitor:production": "node scripts/monitor-production.mjs https://sarj.ist --max-age-hours 48",
     "recover:deployment-state": "node scripts/bootstrap-state-from-deployment.mjs",
     "test": "node --test",
     "build": "npm run validate:data && npm run prepare:data && astro build",
