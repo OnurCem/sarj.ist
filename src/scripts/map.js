@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { closestRegion, configureStationLocationLink, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationDetail } from '../lib/station-presentation.mjs';
+import { closestRegion, configureStationLocationLink, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -188,6 +188,10 @@ function clearUserLocation() {
   currentPosition = undefined;
   if (userLocationMarker) map.removeLayer(userLocationMarker);
   userLocationMarker = undefined;
+  hideLocationStatus();
+}
+
+function hideLocationStatus() {
   document.querySelectorAll('.location-status-message').forEach((status) => { status.hidden = true; });
 }
 
@@ -286,9 +290,8 @@ async function locateUser() {
       map.invalidateSize({ pan: false });
     }
     map.setView([coordinates.lat, coordinates.lng], locationZoomLevel(position.coords.accuracy), { animate: false });
-    const detail = userLocationDetail(coordinates, position.coords.accuracy, stations, region);
-    $('#map-region-name').textContent = detail.label;
-    showLocationStatus(detail.status);
+    $('#map-region-name').textContent = userLocationLabel(coordinates, position.coords.accuracy, stations, region);
+    hideLocationStatus();
   } catch (error) {
     const denied = error?.code === 1;
     showLocationStatus(denied ? 'Konum izni verilmedi. Şehir adını arayabilir veya listeden seçebilirsin.' : 'Konum alınamadı. Şehir adını arayabilir veya listeden seçebilirsin.');

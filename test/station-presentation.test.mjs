@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { androidStationLocationUrl, closestRegion, configureStationLocationLink, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, mapHref, MIN_STATION_LIST_ZOOM, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationDetail } from '../src/lib/station-presentation.mjs';
+import { androidStationLocationUrl, closestRegion, configureStationLocationLink, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, mapHref, MIN_STATION_LIST_ZOOM, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../src/lib/station-presentation.mjs';
 import { r2Arguments, STATE_OBJECTS } from '../scripts/cloudflare-state.mjs';
 import { validateDeployment } from '../scripts/smoke-deployment.mjs';
 import { buildHealthDocument, validateHealthDocument } from '../scripts/lib/deployment-health.mjs';
@@ -117,19 +117,17 @@ test('finds the nearest regional center and calculates distance', () => {
   assert.ok(distanceKm({ lat: 39.9, lng: 32.8 }, { lat: 39.93, lng: 32.86 }) < 7);
 });
 
-test('shows a nearby district as an estimate and always reports the measured coordinates', () => {
+test('shows a nearby district as an estimate and otherwise uses measured coordinates', () => {
   const position = { lat: 40.99012, lng: 29.02534 };
   const region = { slug: 'istanbul', name: 'İstanbul' };
   const stations = [
     { lat: 40.9903, lng: 29.0254, district: 'Kadıköy', citySlug: 'istanbul' },
     { lat: 40.9902, lng: 29.0254, district: 'Çankaya', citySlug: 'ankara' },
   ];
-  const nearby = userLocationDetail(position, 25, stations, region);
-  assert.equal(nearby.label, 'Konumun · Kadıköy civarı');
-  assert.equal(nearby.status, 'İstanbul · 40.99012, 29.02534. İstasyonlar yakınlığa göre sıralandı.');
-  assert.equal(userLocationDetail(position, 800, stations, region).label, 'Konumun · 40.9901, 29.0253');
-  assert.equal(userLocationDetail(position, 25, [], region).label, 'Konumun · 40.9901, 29.0253');
-  assert.equal(userLocationDetail(position, 25, [{ lat: 41.02, lng: 29.03, district: 'Kadıköy', citySlug: 'istanbul' }], region).label, 'Konumun · 40.9901, 29.0253');
+  assert.equal(userLocationLabel(position, 25, stations, region), 'Konumun · Kadıköy civarı');
+  assert.equal(userLocationLabel(position, 800, stations, region), 'Konumun · 40.9901, 29.0253');
+  assert.equal(userLocationLabel(position, 25, [], region), 'Konumun · 40.9901, 29.0253');
+  assert.equal(userLocationLabel(position, 25, [{ lat: 41.02, lng: 29.03, district: 'Kadıköy', citySlug: 'istanbul' }], region), 'Konumun · 40.9901, 29.0253');
 });
 
 test('builds explicit remote R2 commands for private refresh state', () => {
