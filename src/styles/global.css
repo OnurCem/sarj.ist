@@ -50,6 +50,9 @@ dialog{border:1px solid #eee2e8;border-radius:22px;padding:34px;max-width:460px;
 .map-action[aria-busy=true],.nearby-button[aria-busy=true]{color:var(--accent);cursor:wait}
 .user-location-marker{border:3px solid var(--surface);border-radius:50%;background:#4285f4;box-shadow:0 0 0 7px #4285f433,0 2px 8px #0005}
 .station-distance{color:var(--ink);font-weight:600;white-space:nowrap}
+.map-top .location-pill{min-width:0;max-width:calc(100% - 61px)}
+.map-top .location-pill strong{overflow-wrap:anywhere}
+.map-top .location-status{top:calc(100% + 8px)}
 @media(max-width:760px){.city-picker{margin-top:10px}.city-grid{grid-template-columns:1fr}.city-card{padding:18px}.city-card-actions{white-space:normal}.location-status{left:0;right:auto;width:min(270px,calc(100vw - 78px))}}
 
 /* Text badges expand for complete operator names and wrap only when space is limited. */

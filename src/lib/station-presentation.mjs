@@ -108,6 +108,24 @@ export function closestRegion(position, regions) {
     .reduce((closest, region) => !closest || distanceKm(position, region.center) < distanceKm(position, closest.center) ? region : closest, undefined);
 }
 
+export function userLocationDetail(position, accuracyMeters, stations, region) {
+  const coordinates = `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+  const accuracy = Number.isFinite(accuracyMeters) && accuracyMeters >= 0
+    ? ` · yaklaşık ${Math.ceil(accuracyMeters)} m doğruluk`
+    : '';
+  const nearby = accuracyMeters <= 500
+    ? stations.filter(({ citySlug, district, lat, lng }) => citySlug === region.slug && district && Number.isFinite(lat) && Number.isFinite(lng))
+      .reduce((closest, station) => {
+        const distance = distanceKm(position, station);
+        return distance < closest.distance ? { district: station.district, distance } : closest;
+      }, { distance: 1 })
+    : undefined;
+  return {
+    label: nearby?.district ? `Konumun · ${nearby.district} civarı` : `Konumun · ${position.lat.toFixed(4)}, ${position.lng.toFixed(4)}`,
+    status: `${region.name} · ${coordinates}${accuracy}. İstasyonlar yakınlığa göre sıralandı.`,
+  };
+}
+
 export function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
 }
