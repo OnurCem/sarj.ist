@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList } from '../lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, openStationLocation, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -68,8 +68,8 @@ function renderDetail() {
   if (detail.hidden) return;
 
   const routeAction = dataView.isSample
-    ? `<button class="primary" id="sample-route">${icon('navigate')}Yol tarifi hakkında</button>`
-    : `<a class="primary" id="navigation-link" href="${navigationUrl(station)}" target="_blank" rel="noopener noreferrer">${icon('navigate')}Yol tarifi al</a>`;
+    ? `<button class="primary" id="sample-route">${icon('pin')}Konum hakkında</button>`
+    : `<a class="primary" id="location-link" href="${stationLocationUrl(station)}" target="_blank" rel="noopener noreferrer">${icon('pin')}Konumu aç</a>`;
   detail.innerHTML = `<div class="detail-top">${operatorMark(station)}<span class="detail-access">${escapeHtml(station.access)}</span><button class="close-detail" aria-label="İstasyon detayını kapat">${icon('close')}</button></div><h2>${escapeHtml(station.name)}</h2><p class="detail-address">${icon('pin')}${escapeHtml(station.area)}</p><div class="detail-specs"><div>${icon('socket')}<strong>${station.type === 'DC' ? 'DC CCS' : 'AC Tip 2'}</strong><small>Şarj türü</small></div><div>${icon('bolt')}<strong>${station.power} kW</strong><small>Azami güç</small></div><div>${icon('plug')}<strong>${station.sockets} soket</strong><small>Soket sayısı</small></div></div>${routeAction}`;
   $('.close-detail').addEventListener('click', () => {
     detailOpen = false;
@@ -77,6 +77,7 @@ function renderDetail() {
     document.querySelector(`.station-card[data-id="${CSS.escape(selected)}"]`)?.focus();
   });
   $('#sample-route')?.addEventListener('click', () => $('#route-dialog').showModal());
+  $('#location-link')?.addEventListener('click', (event) => openStationLocation(event, station));
 }
 
 function selectStation(id, fromMap = false) {
@@ -167,7 +168,7 @@ function populateRegions() {
 
 function setRegionLabels(region) {
   const nationwide = region.slug === 'all';
-  $('#city-intro').textContent = nationwide ? 'Türkiye genelindeki şarj noktalarını keşfet.' : `${region.name} ve çevresindeki şarj noktalarını keşfet.`;
+  $('#city-intro-copy').textContent = nationwide ? 'Türkiye genelindeki şarj noktalarını keşfet.' : `${region.name} ve çevresindeki şarj noktalarını keşfet.`;
   $('#region-heading').textContent = 'Haritadaki istasyonlar';
   $('#map-region-name').textContent = nationwide ? 'Türkiye geneli' : `${region.name}, Türkiye`;
 }
@@ -211,6 +212,19 @@ function fitMapToStations(targetStations = visible) {
   });
 }
 
+function focusMapOnCity(cityStations) {
+  if (!cityStations.length) return;
+  mapReady = true;
+  if (cityStations.length === 1) {
+    map.setView([cityStations[0].lat, cityStations[0].lng], 14);
+    return;
+  }
+  const middle = Math.floor(cityStations.length / 2);
+  const latitudes = cityStations.map(({ lat }) => lat).sort((a, b) => a - b);
+  const longitudes = cityStations.map(({ lng }) => lng).sort((a, b) => a - b);
+  map.setView([latitudes[middle], longitudes[middle]], 11, { animate: false });
+}
+
 function updateRegionUrl(slug, replace = false) {
   const url = new URL(window.location.href);
   if (slug === 'all') url.searchParams.delete('sehir');
@@ -231,8 +245,8 @@ async function loadRegion(slug, { updateUrl = true, replaceUrl = false, preserve
   setRegionLabels(region);
   render();
   if (fitMap) {
-    const target = region.slug === 'all' ? visible : visible.filter(({ citySlug }) => citySlug === region.slug);
-    fitMapToStations(target);
+    if (region.slug === 'all') fitMapToStations(visible);
+    else focusMapOnCity(visible.filter(({ citySlug }) => citySlug === region.slug));
   }
   if (updateUrl) updateRegionUrl(region.slug, replaceUrl);
   return true;
@@ -388,7 +402,7 @@ document.addEventListener('keydown', (event) => {
 
 const routeDialog = document.createElement('dialog');
 routeDialog.id = 'route-dialog';
-routeDialog.innerHTML = `<h2>Yol tarifi örnek verilerde kapalıdır.</h2><p>Bu konum yalnızca arayüz geliştirmesi içindir. EPDK verisiyle hazırlanan bir yayında bu düğme Google Maps yol tarifini açar.</p><button class="primary">Anladım</button>`;
+routeDialog.innerHTML = `<h2>Konum örnek verilerde kapalıdır.</h2><p>Bu konum yalnızca arayüz geliştirmesi içindir. Gerçek istasyon verisiyle hazırlanan bir yayında bu düğme istasyonun konumunu açar.</p><button class="primary">Anladım</button>`;
 document.body.append(routeDialog);
 routeDialog.querySelector('button').addEventListener('click', () => routeDialog.close());
 window.addEventListener('popstate', () => {

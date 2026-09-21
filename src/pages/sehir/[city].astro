@@ -32,6 +32,6 @@ const dataView = datasetPresentation(dataset);
         </a>
       ))}
     </div>
-    <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>
+    {dataView.isSample && <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>}
   </main>
 </BaseLayout>

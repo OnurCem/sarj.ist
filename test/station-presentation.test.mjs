@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, mapHref, MIN_STATION_LIST_ZOOM, navigationUrl, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList } from '../src/lib/station-presentation.mjs';
+import { closestRegion, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, mapHref, MIN_STATION_LIST_ZOOM, openStationLocation, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl } from '../src/lib/station-presentation.mjs';
 import { r2Arguments, STATE_OBJECTS } from '../scripts/cloudflare-state.mjs';
 import { validateDeployment } from '../scripts/smoke-deployment.mjs';
 import { buildHealthDocument, validateHealthDocument } from '../scripts/lib/deployment-health.mjs';
@@ -26,9 +26,43 @@ test('attributes production datasets to EPDK with their refresh date', () => {
   assert.match(view.warningText, /Anlık müsaitlik, fiyat ve çalışma durumu gösterilmez/);
 });
 
-test('builds encoded navigation links from station coordinates', () => {
-  assert.equal(navigationUrl({ lat: 41.01, lng: 29.04 }), 'https://www.google.com/maps/dir/?api=1&destination=41.01%2C29.04');
-  assert.throws(() => navigationUrl({ lat: Number.NaN, lng: 29.04 }), /finite numbers/);
+test('builds a pin link instead of a directions link', () => {
+  assert.equal(stationLocationUrl({ lat: 41.01, lng: 29.04 }), 'https://www.google.com/maps/search/?api=1&query=41.01%2C29.04');
+  assert.throws(() => stationLocationUrl({ lat: Number.NaN, lng: 29.04 }), /finite numbers/);
+});
+
+test('opens native sharing on touch devices and keeps the link fallback', async () => {
+  const station = { name: 'Test istasyonu', lat: 41.01, lng: 29.04 };
+  const shared = [];
+  let prevented = false;
+  const browser = {
+    navigator: { share: async (payload) => { shared.push(payload); } },
+    matchMedia: () => ({ matches: true }),
+    location: { assign: () => { throw new Error('Unexpected fallback'); } },
+  };
+  await openStationLocation({ preventDefault: () => { prevented = true; } }, station, browser);
+  assert.equal(prevented, true);
+  assert.deepEqual(shared, [{ title: station.name, url: stationLocationUrl(station) }]);
+
+  prevented = false;
+  await openStationLocation({ preventDefault: () => { prevented = true; } }, station, { ...browser, navigator: {} });
+  assert.equal(prevented, false);
+
+  let fallbackUrl;
+  await openStationLocation({ preventDefault() {} }, station, {
+    ...browser,
+    navigator: { share: async () => { throw new Error('Sharing unavailable'); } },
+    location: { assign: (url) => { fallbackUrl = url; } },
+  });
+  assert.equal(fallbackUrl, stationLocationUrl(station));
+
+  fallbackUrl = undefined;
+  await openStationLocation({ preventDefault() {} }, station, {
+    ...browser,
+    navigator: { share: async () => { throw { name: 'AbortError' }; } },
+    location: { assign: (url) => { fallbackUrl = url; } },
+  });
+  assert.equal(fallbackUrl, undefined);
 });
 
 test('sorts unique operators and keeps complete badge labels', () => {

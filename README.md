@@ -32,7 +32,7 @@ See [the data pipeline documentation](docs/data-pipeline.md) for the response co
 - Keyboard focus styles, reduced-motion support, and map error states.
 - Optional province selection with URL-addressable focus views; the nationwide map keeps neighboring provinces visible.
 - Visible EPDK attribution and refresh date when production data is loaded.
-- External Google Maps directions for production station coordinates.
+- Station location links with native sharing on supported touch devices.
 - Public aggregate health metadata and hourly production monitoring with EPDK data-freshness checks.
 
 The home map opens with a Turkey-wide overview. Map tiles are provided by OpenStreetMap, and web fonts are loaded from Google Fonts; those resources require an internet connection.

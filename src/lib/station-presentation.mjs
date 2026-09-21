@@ -27,10 +27,20 @@ export function datasetPresentation(meta = {}) {
   };
 }
 
-export function navigationUrl({ lat, lng }) {
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) throw new Error('Navigation coordinates must be finite numbers');
-  const destination = encodeURIComponent(`${lat},${lng}`);
-  return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+export function stationLocationUrl({ lat, lng }) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) throw new Error('Station coordinates must be finite numbers');
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
+}
+
+export async function openStationLocation(event, station, browser = globalThis) {
+  if (!browser.navigator?.share || !browser.matchMedia?.('(pointer: coarse)').matches) return;
+  event.preventDefault();
+  const url = stationLocationUrl(station);
+  try {
+    await browser.navigator.share({ title: station.name, url });
+  } catch (error) {
+    if (error?.name !== 'AbortError') browser.location.assign(url);
+  }
 }
 
 export function operatorNames(stations) {
