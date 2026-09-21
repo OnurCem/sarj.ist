@@ -13,7 +13,7 @@ const { station } = Astro.props;
 const description = `${station.area} bölgesindeki ${station.operator} ${station.type} şarj noktası: ${station.power} kW azami güç ve ${station.sockets} soket.`;
 const dataView = datasetPresentation(dataset);
 ---
-<BaseLayout title={`${station.name} | şarj.ist`} description={description} canonicalPath={`/istasyon/${station.slug}/`}>
+<BaseLayout title={`${station.name} — ${station.city} | şarj.ist`} description={description} canonicalPath={`/istasyon/${station.slug}/`} breadcrumbs={[{ name: 'şarj.ist', path: '/' }, { name: 'Şehir rehberi', path: '/sehir/' }, { name: station.city, path: `/sehir/${station.citySlug}/` }, { name: station.name, path: `/istasyon/${station.slug}/` }]}>
   <SiteHeader current="station" />
   <main class="content-page">
     <a class="back-link" href={`/?sehir=${station.citySlug}`}>← {station.city} haritasına dön</a>

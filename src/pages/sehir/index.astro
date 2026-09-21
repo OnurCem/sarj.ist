@@ -9,7 +9,7 @@ const cities = [...Map.groupBy(stations, ({ citySlug }) => citySlug).entries()]
   .map(([slug, cityStations]) => ({ slug, name: cityStations[0].city, count: cityStations.length }))
   .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
 ---
-<BaseLayout title="Türkiye elektrikli araç şarj istasyonları | şarj.ist" description="Türkiye'deki elektrikli araç şarj istasyonlarını şehre göre keşfet.">
+<BaseLayout title="Türkiye elektrikli araç şarj istasyonları | şarj.ist" description="Türkiye'deki elektrikli araç şarj istasyonlarını şehre göre keşfet." breadcrumbs={[{ name: 'şarj.ist', path: '/' }, { name: 'Şehir rehberi', path: '/sehir/' }]}>
   <SiteHeader current="city" />
   <main class="content-page city-directory">
     <a class="back-link" href="/">← Haritaya dön</a>

@@ -14,7 +14,7 @@ const { city, citySlug } = Astro.props;
 const cityStations: Station[] = stations.filter((station) => station.citySlug === citySlug);
 const dataView = datasetPresentation(dataset);
 ---
-<BaseLayout title={`${city} elektrikli araç şarj istasyonları | şarj.ist`} description={`${city} elektrikli araç şarj istasyonlarını operatör, güç ve soket bilgileriyle incele.`} canonicalPath={`/sehir/${citySlug}/`}>
+<BaseLayout title={`${city} elektrikli araç şarj istasyonları | şarj.ist`} description={`${city} elektrikli araç şarj istasyonlarını operatör, güç ve soket bilgileriyle incele.`} canonicalPath={`/sehir/${citySlug}/`} breadcrumbs={[{ name: 'şarj.ist', path: '/' }, { name: 'Şehir rehberi', path: '/sehir/' }, { name: city, path: `/sehir/${citySlug}/` }]}>
   <SiteHeader current="city" />
   <main class="content-page city-page">
     <a class="back-link" href={`/?sehir=${citySlug}`}>← {city} haritasına dön</a>

@@ -7,10 +7,21 @@ interface Props {
   title: string;
   description: string;
   canonicalPath?: string;
+  breadcrumbs?: { name: string; path: string }[];
 }
 
-const { title, description, canonicalPath = Astro.url.pathname } = Astro.props;
+const { title, description, canonicalPath = Astro.url.pathname, breadcrumbs } = Astro.props;
 const canonical = new URL(canonicalPath, Astro.site ?? Astro.url.origin);
+const breadcrumbJson = breadcrumbs && JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: breadcrumbs.map(({ name, path }, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name,
+    item: new URL(path, Astro.site ?? Astro.url.origin).href,
+  })),
+}).replace(/</g, '\\u003c');
 ---
 <!doctype html>
 <html lang="tr">
@@ -21,6 +32,7 @@ const canonical = new URL(canonicalPath, Astro.site ?? Astro.url.origin);
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {breadcrumbJson && <script type="application/ld+json" set:html={breadcrumbJson} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
