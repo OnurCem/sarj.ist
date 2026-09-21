@@ -32,14 +32,18 @@ export function stationLocationUrl({ lat, lng }) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
 }
 
-export async function openStationLocation(event, station, browser = globalThis) {
-  if (!browser.navigator?.share || !browser.matchMedia?.('(pointer: coarse)').matches) return;
-  event.preventDefault();
-  const url = stationLocationUrl(station);
-  try {
-    await browser.navigator.share({ title: station.name, url });
-  } catch (error) {
-    if (error?.name !== 'AbortError') browser.location.assign(url);
+export function androidStationLocationUrl({ lat, lng }) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) throw new Error('Station coordinates must be finite numbers');
+  return `geo:0,0?q=${lat},${lng}`;
+}
+
+export function configureStationLocationLink(link, station, browser = globalThis) {
+  if (!link) return;
+  const platform = browser.navigator?.userAgentData?.platform;
+  const userAgent = browser.navigator?.userAgent || '';
+  if (platform === 'Android' || /\bAndroid\b/i.test(userAgent)) {
+    link.href = androidStationLocationUrl(station);
+    link.removeAttribute('target');
   }
 }
 

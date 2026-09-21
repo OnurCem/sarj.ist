@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, openStationLocation, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl } from '../lib/station-presentation.mjs';
+import { closestRegion, configureStationLocationLink, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -77,7 +77,7 @@ function renderDetail() {
     document.querySelector(`.station-card[data-id="${CSS.escape(selected)}"]`)?.focus();
   });
   $('#sample-route')?.addEventListener('click', () => $('#route-dialog').showModal());
-  $('#location-link')?.addEventListener('click', (event) => openStationLocation(event, station));
+  configureStationLocationLink($('#location-link'), station);
 }
 
 function selectStation(id, fromMap = false) {

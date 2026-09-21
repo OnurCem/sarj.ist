@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { closestRegion, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, mapHref, MIN_STATION_LIST_ZOOM, openStationLocation, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl } from '../src/lib/station-presentation.mjs';
+import { androidStationLocationUrl, closestRegion, configureStationLocationLink, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, mapHref, MIN_STATION_LIST_ZOOM, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl } from '../src/lib/station-presentation.mjs';
 import { r2Arguments, STATE_OBJECTS } from '../scripts/cloudflare-state.mjs';
 import { validateDeployment } from '../scripts/smoke-deployment.mjs';
 import { buildHealthDocument, validateHealthDocument } from '../scripts/lib/deployment-health.mjs';
@@ -28,41 +28,31 @@ test('attributes production datasets to EPDK with their refresh date', () => {
 
 test('builds a pin link instead of a directions link', () => {
   assert.equal(stationLocationUrl({ lat: 41.01, lng: 29.04 }), 'https://www.google.com/maps/search/?api=1&query=41.01%2C29.04');
+  assert.equal(androidStationLocationUrl({ lat: 41.01, lng: 29.04 }), 'geo:0,0?q=41.01,29.04');
   assert.throws(() => stationLocationUrl({ lat: Number.NaN, lng: 29.04 }), /finite numbers/);
+  assert.throws(() => androidStationLocationUrl({ lat: Number.NaN, lng: 29.04 }), /finite numbers/);
 });
 
-test('opens native sharing on touch devices and keeps the link fallback', async () => {
-  const station = { name: 'Test istasyonu', lat: 41.01, lng: 29.04 };
-  const shared = [];
-  let prevented = false;
-  const browser = {
-    navigator: { share: async (payload) => { shared.push(payload); } },
-    matchMedia: () => ({ matches: true }),
-    location: { assign: () => { throw new Error('Unexpected fallback'); } },
-  };
-  await openStationLocation({ preventDefault: () => { prevented = true; } }, station, browser);
-  assert.equal(prevented, true);
-  assert.deepEqual(shared, [{ title: station.name, url: stationLocationUrl(station) }]);
-
-  prevented = false;
-  await openStationLocation({ preventDefault: () => { prevented = true; } }, station, { ...browser, navigator: {} });
-  assert.equal(prevented, false);
-
-  let fallbackUrl;
-  await openStationLocation({ preventDefault() {} }, station, {
-    ...browser,
-    navigator: { share: async () => { throw new Error('Sharing unavailable'); } },
-    location: { assign: (url) => { fallbackUrl = url; } },
+test('uses the Android map-app intent and leaves other devices on the web pin link', () => {
+  const station = { lat: 41.01, lng: 29.04 };
+  const link = () => ({
+    href: stationLocationUrl(station),
+    target: '_blank',
+    removeAttribute(name) { if (name === 'target') this.target = ''; },
   });
-  assert.equal(fallbackUrl, stationLocationUrl(station));
+  const androidLink = link();
+  configureStationLocationLink(androidLink, station, { navigator: { userAgent: 'Mozilla/5.0 (Linux; Android 15)' } });
+  assert.equal(androidLink.href, androidStationLocationUrl(station));
+  assert.equal(androidLink.target, '');
 
-  fallbackUrl = undefined;
-  await openStationLocation({ preventDefault() {} }, station, {
-    ...browser,
-    navigator: { share: async () => { throw { name: 'AbortError' }; } },
-    location: { assign: (url) => { fallbackUrl = url; } },
-  });
-  assert.equal(fallbackUrl, undefined);
+  const iosLink = link();
+  configureStationLocationLink(iosLink, station, { navigator: { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0)' } });
+  assert.equal(iosLink.href, stationLocationUrl(station));
+  assert.equal(iosLink.target, '_blank');
+
+  const androidClientHintsLink = link();
+  configureStationLocationLink(androidClientHintsLink, station, { navigator: { userAgentData: { platform: 'Android' } } });
+  assert.equal(androidClientHintsLink.href, androidStationLocationUrl(station));
 });
 
 test('sorts unique operators and keeps complete badge labels', () => {

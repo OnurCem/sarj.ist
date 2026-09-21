@@ -34,22 +34,20 @@ const dataView = datasetPresentation(dataset);
       </dl>
       {dataView.isSample && <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>}
       <div class="page-actions">
-        {!dataView.isSample && <a class="primary page-action" id="station-location-link" href={stationLocationUrl(station)} data-name={station.name} data-lat={station.lat} data-lng={station.lng} target="_blank" rel="noopener noreferrer">Konumu aç</a>}
+        {!dataView.isSample && <a class="primary page-action" id="station-location-link" href={stationLocationUrl(station)} data-lat={station.lat} data-lng={station.lng} target="_blank" rel="noopener noreferrer">Konumu aç</a>}
         <a class="primary page-action secondary-action" href={`/sehir/${station.citySlug}/`}>{station.city} şarj istasyonlarını incele</a>
       </div>
     </article>
   </main>
 </BaseLayout>
 <script>
-  import { openStationLocation } from '../../lib/station-presentation.mjs';
+  import { configureStationLocationLink } from '../../lib/station-presentation.mjs';
 
   const link = document.querySelector('#station-location-link');
-  link?.addEventListener('click', (event) => {
-    const station = {
-      name: link.dataset.name,
+  if (link) {
+    configureStationLocationLink(link, {
       lat: Number(link.dataset.lat),
       lng: Number(link.dataset.lng),
-    };
-    openStationLocation(event, station);
-  });
+    });
+  }
 </script>
