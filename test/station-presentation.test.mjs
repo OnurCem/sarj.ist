@@ -126,7 +126,7 @@ test('shows a nearby district as an estimate and always reports the measured coo
   ];
   const nearby = userLocationDetail(position, 25, stations, region);
   assert.equal(nearby.label, 'Konumun · Kadıköy civarı');
-  assert.match(nearby.status, /İstanbul · 40\.99012, 29\.02534 · yaklaşık 25 m doğruluk/);
+  assert.equal(nearby.status, 'İstanbul · 40.99012, 29.02534. İstasyonlar yakınlığa göre sıralandı.');
   assert.equal(userLocationDetail(position, 800, stations, region).label, 'Konumun · 40.9901, 29.0253');
   assert.equal(userLocationDetail(position, 25, [], region).label, 'Konumun · 40.9901, 29.0253');
   assert.equal(userLocationDetail(position, 25, [{ lat: 41.02, lng: 29.03, district: 'Kadıköy', citySlug: 'istanbul' }], region).label, 'Konumun · 40.9901, 29.0253');

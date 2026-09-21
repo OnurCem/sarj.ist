@@ -110,9 +110,6 @@ export function closestRegion(position, regions) {
 
 export function userLocationDetail(position, accuracyMeters, stations, region) {
   const coordinates = `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
-  const accuracy = Number.isFinite(accuracyMeters) && accuracyMeters >= 0
-    ? ` · yaklaşık ${Math.ceil(accuracyMeters)} m doğruluk`
-    : '';
   const nearby = accuracyMeters <= 500
     ? stations.filter(({ citySlug, district, lat, lng }) => citySlug === region.slug && district && Number.isFinite(lat) && Number.isFinite(lng))
       .reduce((closest, station) => {
@@ -122,7 +119,7 @@ export function userLocationDetail(position, accuracyMeters, stations, region) {
     : undefined;
   return {
     label: nearby?.district ? `Konumun · ${nearby.district} civarı` : `Konumun · ${position.lat.toFixed(4)}, ${position.lng.toFixed(4)}`,
-    status: `${region.name} · ${coordinates}${accuracy}. İstasyonlar yakınlığa göre sıralandı.`,
+    status: `${region.name} · ${coordinates}. İstasyonlar yakınlığa göre sıralandı.`,
   };
 }
 
