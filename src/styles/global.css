@@ -53,6 +53,7 @@ dialog{border:1px solid #eee2e8;border-radius:22px;padding:34px;max-width:460px;
 .map-top .location-pill{min-width:0;max-width:calc(100% - 61px)}
 .map-top .location-pill strong{overflow-wrap:anywhere}
 .map-top .location-status{top:calc(100% + 8px)}
+@media(min-width:761px){.map-legend{bottom:8px}}
 @media(max-width:760px){.city-picker{margin-top:10px}.city-grid{grid-template-columns:1fr}.city-card{padding:18px}.city-card-actions{white-space:normal}.location-status{left:0;right:auto;width:min(270px,calc(100vw - 78px))}}
 
 /* Text badges expand for complete operator names and wrap only when space is limited. */
