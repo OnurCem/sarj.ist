@@ -97,3 +97,10 @@ dialog{border:1px solid #eee2e8;border-radius:22px;padding:34px;max-width:460px;
 .home-guides a{color:var(--muted);text-underline-offset:3px}
 @media(max-width:760px){.district-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.city-station-row .operator-mark{max-width:90px;flex-shrink:0}.city-station-power{flex-shrink:0}}
 @media(max-width:370px){.district-grid{grid-template-columns:1fr}.city-station-row{flex-wrap:wrap}.city-station-power{margin-left:auto}}
+
+/* Keep mobile controls readable without Safari focus zoom, and reserve the toggle's space. */
+@media(max-width:760px){
+  .searchbox input,.city-picker select,#operator{font-size:16px}
+  .sidebar{padding-bottom:82px}
+  .station-list{padding-bottom:16px}
+}

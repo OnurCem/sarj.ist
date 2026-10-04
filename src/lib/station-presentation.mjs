@@ -85,7 +85,7 @@ export function regionSlugFromSearch(search, regions) {
 }
 
 export function normalizedSearch(value) {
-  return String(value).trim().toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return String(value).trim().toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i');
 }
 
 export function districtIdentity(value) {
@@ -95,7 +95,7 @@ export function districtIdentity(value) {
 export function regionFromQuery(query, regions) {
   const requested = normalizedSearch(query);
   if (requested.length < 2) return undefined;
-  const matches = regions.filter(({ name, slug }) => normalizedSearch(name).startsWith(requested) || normalizedSearch(slug) === requested);
+  const matches = regions.filter(({ name, slug }) => normalizedSearch(name).startsWith(requested) || normalizedSearch(slug).startsWith(requested));
   return matches.length === 1 ? matches[0] : matches.find(({ name, slug }) => [normalizedSearch(name), normalizedSearch(slug)].includes(requested));
 }
 
@@ -105,6 +105,18 @@ export function distanceKm(from, to) {
   const deltaLng = radians(to.lng - from.lng);
   const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(radians(from.lat)) * Math.cos(radians(to.lat)) * Math.sin(deltaLng / 2) ** 2;
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export function cityFocusStation(stations) {
+  if (!stations.length) return undefined;
+  const middle = Math.floor(stations.length / 2);
+  const center = {
+    lat: stations.map(({ lat }) => lat).sort((a, b) => a - b)[middle],
+    lng: stations.map(({ lng }) => lng).sort((a, b) => a - b)[middle],
+  };
+  // Separate coordinate medians can land between distant station groups.
+  // Anchor the initial view to an actual station near that central point.
+  return stations.reduce((closest, station) => distanceKm(center, station) < distanceKm(center, closest) ? station : closest);
 }
 
 export function closestRegion(position, regions) {

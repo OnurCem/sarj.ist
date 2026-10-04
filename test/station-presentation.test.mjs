@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { androidStationLocationUrl, closestRegion, configureStationLocationLink, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, mapHref, MIN_STATION_LIST_ZOOM, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../src/lib/station-presentation.mjs';
+import { androidStationLocationUrl, cityFocusStation, closestRegion, configureStationLocationLink, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, mapHref, MIN_STATION_LIST_ZOOM, normalizedSearch, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../src/lib/station-presentation.mjs';
 import { r2Arguments, STATE_OBJECTS } from '../scripts/cloudflare-state.mjs';
 import { validateDeployment } from '../scripts/smoke-deployment.mjs';
 import { buildHealthDocument, validateHealthDocument } from '../scripts/lib/deployment-health.mjs';
@@ -106,6 +106,32 @@ test('finds a uniquely matching province from map search text', () => {
   assert.equal(regionFromQuery('ank', regions)?.slug, 'ankara');
   assert.equal(regionFromQuery('istanbul', regions)?.slug, 'istanbul');
   assert.equal(regionFromQuery('an', regions), undefined);
+});
+
+test('accepts ASCII city names without prematurely selecting Isparta', () => {
+  const regions = [
+    { slug: 'istanbul', name: 'İstanbul' },
+    { slug: 'isparta', name: 'Isparta' },
+    { slug: 'izmir', name: 'İzmir' },
+  ];
+  assert.equal(regionFromQuery('Is', regions), undefined);
+  assert.equal(regionFromQuery('Ista', regions)?.slug, 'istanbul');
+  assert.equal(regionFromQuery('Istanbul', regions)?.slug, 'istanbul');
+  assert.equal(regionFromQuery('Izmir', regions)?.slug, 'izmir');
+  assert.equal(regionFromQuery('ISPARTA', regions)?.slug, 'isparta');
+  assert.ok(normalizedSearch('İstanbul, Küçükçekmece').includes(normalizedSearch('Istanbul')));
+  assert.ok(normalizedSearch('İstanbul, Küçükçekmece').includes(normalizedSearch('kucukcekmece')));
+});
+
+test('anchors sparse city views to a real station rather than an empty coordinate median', () => {
+  const stations = [
+    { id: 'north', lat: 37.7, lng: 30.3 },
+    { id: 'west', lat: 37.2, lng: 29.5 },
+    { id: 'central', lat: 37.3, lng: 30.4 },
+  ];
+  assert.equal(cityFocusStation(stations), stations[2]);
+  assert.equal(cityFocusStation([stations[0]]), stations[0]);
+  assert.equal(cityFocusStation([]), undefined);
 });
 
 test('finds the nearest regional center and calculates distance', () => {

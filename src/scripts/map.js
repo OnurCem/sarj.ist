@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { closestRegion, configureStationLocationLink, datasetPresentation, districtIdentity, distanceKm, escapeHtml, locationZoomLevel, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../lib/station-presentation.mjs';
+import { cityFocusStation, closestRegion, configureStationLocationLink, datasetPresentation, districtIdentity, distanceKm, escapeHtml, locationZoomLevel, normalizedSearch, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -103,13 +103,13 @@ function selectStation(id, fromMap = false) {
 }
 
 function render() {
-  const query = $('#search-input').value.trim().toLocaleLowerCase('tr');
+  const query = normalizedSearch($('#search-input').value);
   visible = stations.filter((station) => (
     (focusedDistrict === null || (station.citySlug === currentRegionSlug && districtIdentity(station.district) === focusedDistrict))
     && (type === 'all' || station.type === type)
     && ($('#operator').value === 'all' || station.operator === $('#operator').value)
     && ($('#private').checked || station.access === 'Halka açık')
-    && `${station.name} ${station.area} ${station.city} ${station.operator}`.toLocaleLowerCase('tr').includes(query)
+    && normalizedSearch(`${station.name} ${station.area} ${station.city} ${station.operator}`).includes(query)
   ));
   if (currentPosition) visible.sort((a, b) => distanceKm(currentPosition, a) - distanceKm(currentPosition, b));
   if (!visible.some(({ id }) => id === selected)) { selected = null; detailOpen = false; }
@@ -225,10 +225,8 @@ function focusMapOnCity(cityStations) {
     map.setView([cityStations[0].lat, cityStations[0].lng], 14);
     return;
   }
-  const middle = Math.floor(cityStations.length / 2);
-  const latitudes = cityStations.map(({ lat }) => lat).sort((a, b) => a - b);
-  const longitudes = cityStations.map(({ lng }) => lng).sort((a, b) => a - b);
-  map.setView([latitudes[middle], longitudes[middle]], 11, { animate: false });
+  const station = cityFocusStation(cityStations);
+  map.setView([station.lat, station.lng], 11, { animate: false });
 }
 
 function updateRegionUrl(slug, replace = false) {
