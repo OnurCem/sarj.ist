@@ -2,7 +2,7 @@
 
 Created: 4 October 2026.
 
-Updated: 4 October 2026, after verifying the Cloudflare redirects.
+Updated: 4 October 2026, after implementation, deployment, and public verification.
 
 ## Progress
 
@@ -12,9 +12,10 @@ Updated: 4 October 2026, after verifying the Cloudflare redirects.
 - Complete: city/district navigation, 50-station pagination, summaries, metadata, breadcrumbs, and sitemap entries.
 - Complete: station details, nearby alternatives, accurate AC/DC labels, homepage search intent, and static city links.
 - Complete: historical station slug redirects and persistence for future name changes.
-- Pending: application release and Search Console follow-up.
+- Complete: application release and post-deployment verification.
+- Pending: Search Console inspections, representative indexing requests, sitemap resubmission, and the 2–4 week measurement review.
 
-Next step: code-only release using `refresh_data=false` and `bootstrap=false`, then representative Search Console inspections and sitemap resubmission.
+Next step: sign in to Search Console, inspect representative updated URLs, request indexing, and resubmit the sitemap once. Review comparable coverage/performance windows after 2–4 weeks.
 
 ### Implementation verification — 4 October 2026
 
@@ -28,19 +29,27 @@ Validation uses the published production bundle refreshed at 08:30 UTC on 4 Octo
 - All 78 generated historical redirect rules (39 renamed stations, slash and non-slash forms) return direct 301s with GET and HEAD in the local Cloudflare runtime, and all targets return 200. The full-directory dev watcher hit a platform limit, so this check used the actual generated rules with their destination files in a focused temporary asset directory.
 - Public production monitoring passes canonical protocol/hostname redirects, retained path/query strings, canonical 200 responses, and a missing-path 404.
 
+### Production release — 4 October 2026, 21:19 Europe/Istanbul
+
+[Code-only production release](https://github.com/OnurCem/sarj.ist/actions/runs/37223867191) succeeded for commit `391bed6a80a9b4bd2ce306a0c1d40674309495b0`, with `refresh_data=false` and `bootstrap=false`. The workflow restored R2 state; skipped EPDK fetch, fetch-guard publication, and reconciliation; passed all 44 tests, build, deployment preflight, deployment smoke test, state publication, and canonical-domain monitoring. The published refresh timestamp remains 4 October 08:30 UTC, with 16,909 stations and 81 cities.
+
+Post-release checks confirmed the deployed commit through `/health.json`, all 78 historical direct 301s, all five removed-station 404s, and district page/sitemap canonicals. Desktop/mobile production browser checks passed the same guide → pagination → station and district-map flows with no browser errors. Granted-geolocation and Back-navigation behavior was additionally checked locally using a synthetic position.
+
+Search Console follow-up remains pending because the available browser session is not signed in. Inspect `https://sarj.ist/`, `https://sarj.ist/sehir/istanbul/`, `https://sarj.ist/sehir/istanbul/kadikoy/`, and the renamed station `https://sarj.ist/istasyon/busan-2-srj-7321/`. Verify live access and canonical selection, request indexing for these pages, and resubmit `https://sarj.ist/sitemap.xml` once. Keep the existing validation process intact.
+
 ## Objective and evidence
 
 Make sarj.ist consistently reachable at its canonical HTTPS domain and make the static directory more useful to people searching for charging stations by city and district.
 
 The supplied exports show 15 indexed pages out of 16,928 known pages in the coverage chart ending 21 September, and 2 clicks from 10 impressions in the performance chart ending 29 September. The drilldown's last crawls predate the later site changes. These are baselines, not proof of a particular cause or a current indexing count.
 
-Initial live checks found HTTP serving content without a redirect, HTTPS www returning 522, and a roughly 2 MB İstanbul guide containing 4,435 station links. The HTTP/www issues were resolved and publicly verified on 4 October 2026. Representative canonical pages return 200 with no noindex directive. Five old station URLs return 404 and are absent from the current sitemap; their audit remains pending.
+Initial live checks found HTTP serving content without a redirect, HTTPS www returning 522, and a roughly 2 MB İstanbul guide containing 4,435 station links. The HTTP/www issues were resolved and publicly verified on 4 October 2026. Representative canonical pages return 200 with no noindex directive. Five old station URLs return 404 and are absent from the current sitemap; the audit below confirms their removals.
 
 ## 1. Resolve canonical domain handling first
 
 Owner: Cloudflare account administrator, with public verification from this workspace.
 
-Status: **Cloudflare configuration complete; redirect monitoring pending.** The dashboard procedure below is retained as configuration documentation.
+Status: **Cloudflare configuration and redirect regression monitoring complete.** The dashboard procedure below is retained as configuration documentation.
 
 ### Verified results — 4 October 2026
 
