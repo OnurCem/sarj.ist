@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { closestRegion, configureStationLocationLink, datasetPresentation, distanceKm, escapeHtml, locationZoomLevel, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../lib/station-presentation.mjs';
+import { closestRegion, configureStationLocationLink, datasetPresentation, districtIdentity, distanceKm, escapeHtml, locationZoomLevel, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -19,6 +19,7 @@ let userLocationMarker;
 let userMapNavigation = false;
 let mapReady = false;
 let countryOverview = false;
+let focusedDistrict = null;
 const markers = new Map();
 
 const map = L.map('map', { zoomControl: false, scrollWheelZoom: true, maxZoom: 19 }).setView([41.08, 28.99], 13);
@@ -70,7 +71,7 @@ function renderDetail() {
   const routeAction = dataView.isSample
     ? `<button class="primary" id="sample-route">${icon('pin')}Konum hakkında</button>`
     : `<a class="primary" id="location-link" href="${stationLocationUrl(station)}" target="_blank" rel="noopener noreferrer">${icon('pin')}Konumu aç</a>`;
-  detail.innerHTML = `<div class="detail-top">${operatorMark(station)}<span class="detail-access">${escapeHtml(station.access)}</span><button class="close-detail" aria-label="İstasyon detayını kapat">${icon('close')}</button></div><h2>${escapeHtml(station.name)}</h2><p class="detail-address">${icon('pin')}${escapeHtml(station.area)}</p><div class="detail-specs"><div>${icon('socket')}<strong>${station.type === 'DC' ? 'DC CCS' : 'AC Tip 2'}</strong><small>Şarj türü</small></div><div>${icon('bolt')}<strong>${station.power} kW</strong><small>Azami güç</small></div><div>${icon('plug')}<strong>${station.sockets} soket</strong><small>Soket sayısı</small></div></div>${routeAction}`;
+  detail.innerHTML = `<div class="detail-top">${operatorMark(station)}<span class="detail-access">${escapeHtml(station.access)}</span><button class="close-detail" aria-label="İstasyon detayını kapat">${icon('close')}</button></div><h2>${escapeHtml(station.name)}</h2><p class="detail-address">${icon('pin')}${escapeHtml(station.area)}</p><div class="detail-specs"><div>${icon('socket')}<strong>${station.type}</strong><small>Şarj türü</small></div><div>${icon('bolt')}<strong>${station.power} kW</strong><small>Azami güç</small></div><div>${icon('plug')}<strong>${station.sockets} soket</strong><small>Soket sayısı</small></div></div>${routeAction}`;
   $('.close-detail').addEventListener('click', () => {
     detailOpen = false;
     renderDetail();
@@ -104,7 +105,8 @@ function selectStation(id, fromMap = false) {
 function render() {
   const query = $('#search-input').value.trim().toLocaleLowerCase('tr');
   visible = stations.filter((station) => (
-    (type === 'all' || station.type === type)
+    (focusedDistrict === null || (station.citySlug === currentRegionSlug && districtIdentity(station.district) === focusedDistrict))
+    && (type === 'all' || station.type === type)
     && ($('#operator').value === 'all' || station.operator === $('#operator').value)
     && ($('#private').checked || station.access === 'Halka açık')
     && `${station.name} ${station.area} ${station.city} ${station.operator}`.toLocaleLowerCase('tr').includes(query)
@@ -170,7 +172,7 @@ function setRegionLabels(region) {
   const nationwide = region.slug === 'all';
   $('#city-intro-copy').textContent = nationwide ? 'Türkiye genelindeki şarj noktalarını keşfet.' : `${region.name} ve çevresindeki şarj noktalarını keşfet.`;
   $('#region-heading').textContent = 'Haritadaki istasyonlar';
-  $('#map-region-name').textContent = nationwide ? 'Türkiye geneli' : `${region.name}, Türkiye`;
+  $('#map-region-name').textContent = focusedDistrict !== null ? `${focusedDistrict || 'İlçe belirtilmemiş'}, ${region.name}` : nationwide ? 'Türkiye geneli' : `${region.name}, Türkiye`;
 }
 
 function clearFiltersWithoutRendering({ preserveSearch = false } = {}) {
@@ -231,18 +233,20 @@ function focusMapOnCity(cityStations) {
 
 function updateRegionUrl(slug, replace = false) {
   const url = new URL(window.location.href);
+  if (focusedDistrict === null) url.searchParams.delete('ilce');
   if (slug === 'all') url.searchParams.delete('sehir');
   else url.searchParams.set('sehir', slug);
   window.history[replace ? 'replaceState' : 'pushState']({ region: slug }, '', url);
 }
 
-async function loadRegion(slug, { updateUrl = true, replaceUrl = false, preserveSearch = false, preserveLocation = false, fitMap = true } = {}) {
+async function loadRegion(slug, { updateUrl = true, replaceUrl = false, preserveSearch = false, preserveLocation = false, fitMap = true, district = null } = {}) {
   const region = regions.find((candidate) => candidate.slug === slug);
   if (!region) return false;
   if (!preserveLocation) clearUserLocation();
   $('#region-select').value = region.slug;
   selected = null;
   detailOpen = false;
+  focusedDistrict = district !== null && stations.some((station) => station.citySlug === slug && districtIdentity(station.district) === district) ? district : null;
   currentRegionSlug = region.slug;
   countryOverview = region.slug === 'all' && fitMap;
   clearFiltersWithoutRendering({ preserveSearch });
@@ -250,6 +254,7 @@ async function loadRegion(slug, { updateUrl = true, replaceUrl = false, preserve
   render();
   if (fitMap) {
     if (region.slug === 'all') fitMapToStations(visible);
+    else if (focusedDistrict !== null) fitMapToStations(visible);
     else focusMapOnCity(visible.filter(({ citySlug }) => citySlug === region.slug));
   }
   if (updateUrl) updateRegionUrl(region.slug, replaceUrl);
@@ -304,7 +309,7 @@ async function locateUserIfGranted() {
   if (!navigator.geolocation || !navigator.permissions?.query) return;
   try {
     const permission = await navigator.permissions.query({ name: 'geolocation' });
-    if (shouldAutoLocate(permission.state)) await locateUser();
+    if (shouldAutoLocate(permission.state, new URLSearchParams(window.location.search).has('sehir'))) await locateUser();
   } catch {
     // Permission queries are not supported consistently; the location buttons remain available.
   }
@@ -325,7 +330,7 @@ async function initializeRegions() {
     populateOperators();
     const requestedSlug = new URLSearchParams(window.location.search).get('sehir');
     const initialSlug = regionSlugFromSearch(window.location.search, regions);
-    await loadRegion(initialSlug, { updateUrl: requestedSlug !== initialSlug, replaceUrl: true });
+    await loadRegion(initialSlug, { updateUrl: requestedSlug !== initialSlug, replaceUrl: true, district: new URLSearchParams(window.location.search).get('ilce') });
     return true;
   } catch (error) {
     console.error('Station regions could not be loaded', error);
@@ -411,7 +416,8 @@ document.body.append(routeDialog);
 routeDialog.querySelector('button').addEventListener('click', () => routeDialog.close());
 window.addEventListener('popstate', () => {
   const slug = regionSlugFromSearch(window.location.search, regions);
-  if (slug && slug !== currentRegionSlug) loadRegion(slug, { updateUrl: false });
+  const district = new URLSearchParams(window.location.search).get('ilce');
+  if (slug && (slug !== currentRegionSlug || district !== focusedDistrict)) loadRegion(slug, { updateUrl: false, district });
 });
 initializeRegions().then((loaded) => {
   if (loaded) locateUserIfGranted();

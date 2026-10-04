@@ -1,7 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { districtPath } from '../../lib/station-guides.mjs';
 import SiteHeader from '../../components/SiteHeader.astro';
-import { dataset, stations, type Station } from '../../data/stations';
+import { dataset, stations, stationDistrict, nearbyStations, type Station } from '../../data/stations';
 import { datasetPresentation, operatorBadgeLabel, stationLocationUrl } from '../../lib/station-presentation.mjs';
 
 export function getStaticPaths() {
@@ -10,12 +12,16 @@ export function getStaticPaths() {
 
 interface Props { station: Station }
 const { station } = Astro.props;
-const description = `${station.area} bölgesindeki ${station.operator} ${station.type} şarj noktası: ${station.power} kW azami güç ve ${station.sockets} soket.`;
+const group = stationDistrict(station);
+const alternatives = nearbyStations(station);
+const breadcrumbs = [{ name: 'şarj.ist', path: '/' }, { name: 'Şehir rehberi', path: '/sehir/' }, { name: station.city, path: `/sehir/${station.citySlug}/` }, { name: group.name, path: districtPath(group) }, { name: station.name, path: `/istasyon/${station.slug}/` }];
+const description = `${station.name}: ${station.city}, ${group.name} bölgesindeki ${station.operator} ${station.type} şarj noktası: ${station.power} kW kayıtlı güç ve ${station.sockets} soket.`;
 const dataView = datasetPresentation(dataset);
 ---
-<BaseLayout title={`${station.name} — ${station.city} | şarj.ist`} description={description} canonicalPath={`/istasyon/${station.slug}/`} breadcrumbs={[{ name: 'şarj.ist', path: '/' }, { name: 'Şehir rehberi', path: '/sehir/' }, { name: station.city, path: `/sehir/${station.citySlug}/` }, { name: station.name, path: `/istasyon/${station.slug}/` }]}>
+<BaseLayout title={`${station.name} — ${group.name}, ${station.city} şarj istasyonu | şarj.ist`} description={description} canonicalPath={`/istasyon/${station.slug}/`} breadcrumbs={breadcrumbs}>
   <SiteHeader current="station" />
   <main class="content-page">
+    <Breadcrumbs items={breadcrumbs} />
     <a class="back-link" href={`/?sehir=${station.citySlug}`}>← {station.city} haritasına dön</a>
     <article class="station-page">
       <div class="page-heading">
@@ -27,17 +33,19 @@ const dataView = datasetPresentation(dataset);
         </div>
       </div>
       <dl class="station-facts">
-        <div><dt>Şarj türü</dt><dd>{station.type === 'DC' ? 'DC CCS' : 'AC Tip 2'}</dd></div>
-        <div><dt>Azami güç</dt><dd>{station.power} kW</dd></div>
+        <div><dt>Şarj türü</dt><dd>{station.type}</dd></div>
+        <div><dt>Kayıtlı güç</dt><dd>{station.power} kW</dd></div>
         <div><dt>Soket sayısı</dt><dd>{station.sockets} soket</dd></div>
         <div><dt>Erişim</dt><dd>{station.access}</dd></div>
       </dl>
       {dataView.isSample && <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>}
       <div class="page-actions">
         {!dataView.isSample && <a class="primary page-action" id="station-location-link" href={stationLocationUrl(station)} data-lat={station.lat} data-lng={station.lng} target="_blank" rel="noopener noreferrer">Konumu aç</a>}
-        <a class="primary page-action secondary-action" href={`/sehir/${station.citySlug}/`}>{station.city} şarj istasyonlarını incele</a>
+        <a class="primary page-action secondary-action" href={districtPath(group)}>{group.name} şarj istasyonlarını incele</a>
       </div>
     </article>
+    {alternatives.length > 0 && <section class="guide-section"><h2>Yakındaki alternatif istasyonlar</h2><p>Mesafeler kayıtlı koordinatlara göre yaklaşık kuş uçuşu mesafedir.</p><div class="city-station-list">{alternatives.map(({ station: alternative, distance }) => <a class="city-station-row" href={`/istasyon/${alternative.slug}/`}><span class="city-station-copy"><strong>{alternative.name}</strong><small>{alternative.operator} · {alternative.type} · {alternative.power} kW · {alternative.access}</small></span><span class="city-station-power">{distance.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km</span></a>)}</div></section>}
+
   </main>
 </BaseLayout>
 <script>

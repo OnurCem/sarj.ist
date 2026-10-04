@@ -41,6 +41,8 @@ try {
   const payload = JSON.parse(await readFile(resolve(options.input), 'utf8'));
   const current = await readJson(outputPath, null);
   const state = await readJson(statePath, {});
+  const seedAliases = await readJson(new URL('../data/station-slug-aliases.json', import.meta.url), {});
+  state.slugAliases = { ...seedAliases, ...state.slugAliases };
   const normalized = normalizeEpdkSnapshot(payload, { retrievedAt });
   const result = reconcileStations({
     current,

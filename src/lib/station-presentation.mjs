@@ -61,8 +61,8 @@ export function shouldShowStationList(zoom) {
   return Number.isFinite(zoom) && zoom >= MIN_STATION_LIST_ZOOM;
 }
 
-export function shouldAutoLocate(permissionState) {
-  return permissionState === 'granted';
+export function shouldAutoLocate(permissionState, hasRequestedRegion = false) {
+  return permissionState === 'granted' && !hasRequestedRegion;
 }
 
 export function locationZoomLevel(accuracyMeters) {
@@ -86,6 +86,10 @@ export function regionSlugFromSearch(search, regions) {
 
 export function normalizedSearch(value) {
   return String(value).trim().toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+export function districtIdentity(value) {
+  return String(value ?? '').normalize('NFC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('tr');
 }
 
 export function regionFromQuery(query, regions) {

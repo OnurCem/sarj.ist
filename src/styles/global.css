@@ -75,3 +75,24 @@ dialog{border:1px solid #eee2e8;border-radius:22px;padding:34px;max-width:460px;
 .site-footer{position:fixed;right:0;bottom:0;left:0;z-index:1000;min-height:var(--footer-height);padding:0 38px}
 .workspace{height:calc(100dvh - 88px - var(--footer-height))}
 @media(max-width:760px){.site-footer{min-height:var(--footer-height);padding:0 20px;align-items:center;flex-direction:row}.site-footer nav{gap:16px}.workspace{height:calc(100dvh - 74px - var(--footer-height))}.mobile-toggle,.map-mode .mobile-toggle{bottom:calc(var(--footer-height) + 14px)}}
+
+.breadcrumbs{margin-bottom:24px;font-size:13px;color:var(--muted)}
+.breadcrumbs ol{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0}
+.breadcrumbs li+li:before{content:'›';margin-right:8px}
+.breadcrumbs a{color:var(--accent);text-underline-offset:3px}
+.guide-summary>p,.guide-summary details,.guide-section>p{color:var(--muted);line-height:1.65;font-size:14px;margin:16px 0}
+.guide-summary summary,.home-guides summary{cursor:pointer;color:var(--accent)}
+.guide-section{margin-top:36px}
+.guide-section h2{font:750 24px/1.3 Manrope,sans-serif;margin-bottom:16px}
+.district-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.district-link{display:grid;gap:8px;border:1px solid var(--line);border-radius:12px;padding:18px;color:var(--ink);text-decoration:none;overflow-wrap:anywhere}
+.district-link:hover{background:var(--raised)}
+.district-link span{font-size:13px;color:var(--muted)}
+.guide-pagination{display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px;margin-top:24px;font-size:14px}
+.guide-pagination a{color:var(--accent)}
+.city-station-copy{overflow-wrap:anywhere}
+.home-guides{font-size:13px;margin:-10px 0 18px}
+.home-guides nav{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;max-height:140px;overflow:auto}
+.home-guides a{color:var(--muted);text-underline-offset:3px}
+@media(max-width:760px){.district-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.city-station-row .operator-mark{max-width:90px;flex-shrink:0}.city-station-power{flex-shrink:0}}
+@media(max-width:370px){.district-grid{grid-template-columns:1fr}.city-station-row{flex-wrap:wrap}.city-station-power{margin-left:auto}}

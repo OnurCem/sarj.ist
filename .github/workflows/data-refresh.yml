@@ -99,6 +99,11 @@ jobs:
         id: publish
         run: node scripts/cloudflare-state.mjs publish-validated-state
 
+      - name: Monitor the canonical production domain
+        if: ${{ inputs.recovery_url == '' }}
+        id: monitor
+        run: npm run monitor:production
+
       - name: Recover bootstrap state from the validated deployment
         if: ${{ inputs.recovery_url != '' }}
         env:
@@ -121,6 +126,7 @@ jobs:
           DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
           SMOKE_OUTCOME: ${{ steps.smoke.outcome }}
           PUBLISH_OUTCOME: ${{ steps.publish.outcome }}
+          MONITOR_OUTCOME: ${{ steps.monitor.outcome }}
         run: |
           {
             echo "## Production refresh"
@@ -136,4 +142,5 @@ jobs:
             echo "| Deploy | ${DEPLOY_OUTCOME} |"
             echo "| Public smoke test | ${SMOKE_OUTCOME} |"
             echo "| Publish private state | ${PUBLISH_OUTCOME} |"
+            echo "| Canonical production monitor | ${MONITOR_OUTCOME} |"
           } >> "$GITHUB_STEP_SUMMARY"

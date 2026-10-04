@@ -1,9 +1,16 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stationRedirects } from './lib/station-aliases.mjs';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = JSON.parse(await readFile(resolve(projectRoot, 'data/stations.json'), 'utf8'));
+const seedAliases = JSON.parse(await readFile(resolve(projectRoot, 'data/station-slug-aliases.json'), 'utf8'));
+let state = {};
+try { state = JSON.parse(await readFile(resolve(projectRoot, 'data/import-state.json'), 'utf8')); }
+catch (error) { if (error.code !== 'ENOENT') throw error; }
+const redirects = stationRedirects(source.stations, { ...seedAliases, ...state.slugAliases });
+await writeFile(resolve(projectRoot, 'public/_redirects'), `${redirects.join('\n')}\n`);
 const outputRoot = resolve(projectRoot, 'public/data');
 const regionsRoot = resolve(outputRoot, 'regions');
 const grouped = Map.groupBy(source.stations, ({ citySlug }) => citySlug);

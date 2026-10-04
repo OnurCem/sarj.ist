@@ -1,3 +1,5 @@
+import { retainSlugAliases } from './station-aliases.mjs';
+
 export function reconcileStations({ current, incoming, state = {}, confirmationRuns = 2, minCount = 1, maxDropRate = 0.15, maxInvalidRate = 0.01, importReport, now = new Date().toISOString() }) {
   const rawCount = importReport.rawCount;
   const invalidRate = rawCount === 0 ? 1 : importReport.rejected.length / rawCount;
@@ -47,6 +49,7 @@ export function reconcileStations({ current, incoming, state = {}, confirmationR
   const changed = reconciledIncoming.filter((station) => currentById.has(station.id) && JSON.stringify(currentById.get(station.id)) !== JSON.stringify(station)).map(({ id }) => id);
   const dataset = { ...incoming, stations: [...reconciledIncoming, ...retained] };
   const report = { rawCount, acceptedCount: incoming.stations.length, publishedCount: dataset.stations.length, added, changed, retainedMissing: retained.map(({ id }) => id), removed, retainedSocketCounts, confirmedSocketDecreases, rejected: importReport.rejected };
-  const nextState = { schemaVersion: 1, updatedAt: now, missing, socketDecreases, lastReport: report };
+  const slugAliases = retainSlugAliases(currentStations, dataset.stations, state.slugAliases);
+  const nextState = { schemaVersion: 1, updatedAt: now, missing, socketDecreases, slugAliases, lastReport: report };
   return { dataset, state: nextState, report };
 }

@@ -6,6 +6,7 @@ dist/
 .wrangler/
 .DS_Store
 public/data/
+public/_redirects
 data/raw/
 data/stations.json
 data/import-state.json

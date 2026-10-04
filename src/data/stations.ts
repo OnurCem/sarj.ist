@@ -22,3 +22,9 @@ export interface Station {
 
 export const dataset = source.meta;
 export const stations = source.stations as Station[];
+
+import { buildDistrictGroups, buildNearbyIndex } from '../lib/station-guides.mjs';
+export const districtGroups = buildDistrictGroups(stations);
+const districtsByStation = new Map(districtGroups.flatMap((group) => group.stations.map((station) => [station.id, group])));
+export const stationDistrict = (station: Station) => districtsByStation.get(station.id);
+export const nearbyStations = buildNearbyIndex(stations);

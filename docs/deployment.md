@@ -13,7 +13,7 @@ npx wrangler r2 bucket create sarj-ist-state
 The bucket stores only three private objects:
 
 - `active/stations.json` — the last normalized dataset used for reconciliation.
-- `active/import-state.json` — pending removals and socket-count reductions.
+- `active/import-state.json` — pending removals, socket-count reductions, and historical station slug aliases.
 - `active/fetch-state.json` — the timestamp guard that prevents a second EPDK request inside one hour.
 
 The raw EPDK response is deliberately excluded. It exists only in the temporary GitHub Actions runner and is discarded when the job ends.
@@ -66,7 +66,7 @@ Each build generates `https://sarj.ist/health.json`. It contains only aggregate 
 
 It never contains station names, addresses, coordinates, IDs, or private reconciliation state. Cloudflare serves it with `Cache-Control: no-store`.
 
-The **Production monitor** workflow runs hourly at minute 43 and can also be dispatched manually. It makes three public requests—to the homepage, manifest, and health endpoint—and never calls EPDK or R2. It fails when the application is unavailable, the aggregate counts disagree, sample data is published, or EPDK data is more than 48 hours old. Failed-run notifications follow the repository owner's GitHub Actions notification settings.
+The **Production monitor** workflow runs hourly at minute 43 and can also be dispatched manually. It reads the homepage, manifest, and health endpoint, then checks canonical HTTP/www redirects with GET and HEAD, path/query preservation, canonical 200 responses, and a missing-page 404. It never calls EPDK or R2. Custom-domain redirect checks are skipped for workers.dev smoke-test targets. It fails when the application is unavailable, the aggregate counts disagree, sample data is published, or EPDK data is more than 48 hours old. Failed-run notifications follow the repository owner's GitHub Actions notification settings.
 
 Run the same check locally with:
 
@@ -101,3 +101,13 @@ npm run smoke:deployment -- https://example.workers.dev
 The smoke command rejects production data older than 48 hours. Code that uses `fetchDeploymentSnapshot()` for state recovery deliberately omits this freshness limit so an older validated deployment remains recoverable during an incident.
 
 The Worker name and static routing behavior are declared in `wrangler.jsonc`. Production is available at `https://sarj.ist`; the `workers.dev` hostname remains the deployment fallback and smoke-test target.
+
+## Search directory and historical station URLs
+
+City guides show district links and a 12-station preview. District guides list 50 stations per page with self-canonicals and crawlable Previous/Next navigation. Every district page is included in the sitemap. Missing districts use an explicit unknown group; colliding Turkish district slugs receive deterministic suffixes.
+
+The normalized model summarizes one AC/DC type and power per station. Guides count station records, not charging units, and details do not infer connector standards. Nearby alternatives use a build-time geographic index and show approximate straight-line distances.
+
+`data/station-slug-aliases.json` seeds 39 URL aliases verified by stable station IDs between the September local snapshot and the 4 October production bundle. Subsequent successful refreshes retain further name/slug changes in private `import-state.json`. `prepare:data` generates `_redirects` from these aliases and the active dataset, using direct 301s for slash and non-slash URLs. Removed IDs and occupied slugs produce no redirects. The build fails if the generated rules exceed the [Cloudflare static redirect limit](https://developers.cloudflare.com/workers/static-assets/redirects/).
+
+A public-bundle-only recovery cannot reconstruct historical aliases accumulated only in R2. Preserve the private import-state object when available; the tracked seed covers the 39 audited aliases. Never replace existing private history solely to perform a code-only release.

@@ -1,0 +1,14 @@
+---
+import { guideSummary } from '../lib/station-guides.mjs';
+const summary = guideSummary(Astro.props.stations);
+---
+<section class="guide-summary" aria-label="İstasyon özeti">
+  <dl class="station-facts">
+    <div><dt>Halka açık istasyon</dt><dd>{summary.public}</dd></div>
+    <div><dt>Özel erişimli istasyon</dt><dd>{summary.private}</dd></div>
+    <div><dt>AC olarak sınıflandırılan</dt><dd>{summary.ac} istasyon</dd></div>
+    <div><dt>DC olarak sınıflandırılan</dt><dd>{summary.dc} istasyon</dd></div>
+  </dl>
+  <p>Kayıtlı istasyon güçleri {summary.minPower}–{summary.maxPower} kW aralığında. Sayılar istasyon kayıtlarını ölçer; her kayıtta tek şarj türü ve güç özeti bulunur. Soket türlerinin dağılımını veya aynı istasyonda AC ve DC birlikte bulunduğunu göstermez.</p>
+  <details><summary>{summary.operators.length} operatörü incele</summary><p>{summary.operators.join(' · ')}</p></details>
+</section>

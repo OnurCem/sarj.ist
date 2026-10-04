@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import SiteHeader from '../../../../components/SiteHeader.astro';
+import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
+import GuideSummary from '../../../../components/GuideSummary.astro';
+import StationList from '../../../../components/StationList.astro';
+import { dataset, districtGroups } from '../../../../data/stations';
+import { datasetPresentation } from '../../../../lib/station-presentation.mjs';
+import { districtPath, guidePages } from '../../../../lib/station-guides.mjs';
+
+export function getStaticPaths() {
+  return guidePages(districtGroups).map(({ group, page, stations }) => ({
+    params: { city: group.citySlug, district: group.slug, page: page === 1 ? undefined : `sayfa/${page}` },
+    props: { group, page, stations },
+  }));
+}
+const { group, page, stations } = Astro.props;
+const path = districtPath(group, page);
+const suffix = page > 1 ? ` — Sayfa ${page}` : '';
+const dataView = datasetPresentation(dataset);
+const breadcrumbs = [{ name: 'şarj.ist', path: '/' }, { name: 'Şehir rehberi', path: '/sehir/' }, { name: group.city, path: `/sehir/${group.citySlug}/` }, { name: group.name, path: districtPath(group) }, ...(page > 1 ? [{ name: `Sayfa ${page}`, path }] : [])];
+const mapUrl = `/?sehir=${encodeURIComponent(group.citySlug)}&ilce=${encodeURIComponent(group.identity)}`;
+---
+<BaseLayout title={`${group.name}, ${group.city} şarj istasyonları${suffix} | şarj.ist`} description={`${group.city} ${group.name}: ${group.stations.length} şarj istasyonu. Operatör, AC/DC, kayıtlı güç ve erişim bilgileri${suffix}.`} canonicalPath={path} breadcrumbs={breadcrumbs}>
+  <SiteHeader current="city" />
+  <main class="content-page city-page">
+    <Breadcrumbs items={breadcrumbs} />
+    <a class="back-link" href={mapUrl}>← İlçe haritasını aç</a>
+    <header class="city-heading"><h1>{group.name}, {group.city} şarj istasyonları{suffix}</h1><p>{group.stations.length} {dataView.isSample ? 'örnek istasyon' : 'istasyon'} · Sayfa {page} / {group.pageCount} · Anlık müsaitlik gösterilmez.</p></header>
+    <GuideSummary stations={group.stations} />
+    <section class="guide-section"><h2>İstasyon listesi</h2><StationList stations={stations} /></section>
+    <nav class="guide-pagination" aria-label="İstasyon listesi sayfaları">
+      {page > 1 && <a rel="prev" href={districtPath(group, page - 1)}>← Önceki sayfa</a>}
+      <span>Sayfa {page} / {group.pageCount}</span>
+      {page < group.pageCount && <a rel="next" href={districtPath(group, page + 1)}>Sonraki sayfa →</a>}
+    </nav>
+    {dataView.isSample && <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>}
+  </main>
+</BaseLayout>

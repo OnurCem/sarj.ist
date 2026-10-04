@@ -5,13 +5,14 @@ const source = JSON.parse(await readFile(sourcePath, 'utf8'));
 const failures = [];
 const ids = new Set();
 const slugs = new Set();
-const requiredStrings = ['id', 'slug', 'name', 'area', 'district', 'city', 'citySlug', 'operator', 'type', 'access'];
+const requiredStrings = ['id', 'slug', 'name', 'area', 'city', 'citySlug', 'operator', 'type', 'access'];
 
 if (!source.meta || typeof source.meta.refreshedAt !== 'string' || Number.isNaN(Date.parse(source.meta.refreshedAt))) failures.push('meta.refreshedAt must be a valid ISO date');
 if (!Array.isArray(source.stations) || source.stations.length === 0) failures.push('stations must be a non-empty array');
 
 for (const [index, station] of (source.stations ?? []).entries()) {
   const at = `stations[${index}]`;
+  if (typeof station.district !== 'string') failures.push(`${at}.district must be a string (empty means unknown)`);
   for (const field of requiredStrings) {
     if (typeof station[field] !== 'string' || station[field].trim() === '') failures.push(`${at}.${field} must be a non-empty string`);
   }

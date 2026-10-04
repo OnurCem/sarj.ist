@@ -91,7 +91,7 @@ export function normalizeRecord(raw) {
   const lat = number(first(raw.lat, raw.latitude, raw.enlem, location.lat, location.latitude, location.enlem, coordinates[1]));
   const lng = number(first(raw.lng, raw.lon, raw.longitude, raw.boylam, location.lng, location.lon, location.longitude, location.boylam, coordinates[0]));
   const connector = connectorSummary(raw);
-  const missing = Object.entries({ id, name, operator, city, district, area, lat, lng, power: connector.power, sockets: connector.sockets })
+  const missing = Object.entries({ id, name, operator, city, area, lat, lng, power: connector.power, sockets: connector.sockets })
     .filter(([, value]) => value === '' || value === undefined).map(([key]) => key);
   if (missing.length) throw new Error(`missing ${missing.join(', ')}`);
   if (lat < 35 || lat > 43 || lng < 25 || lng > 46) throw new Error('coordinates fall outside Turkey');

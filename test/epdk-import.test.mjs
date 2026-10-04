@@ -81,7 +81,7 @@ test('rejects a flat address when it does not identify a district and province',
   const raw = { ...rawStations[0], il: undefined, ilce: undefined, adres: 'Atatürk Mahallesi No:1' };
   const { report } = normalizeEpdkSnapshot([raw]);
   assert.equal(report.acceptedCount, 0);
-  assert.match(report.rejected[0].reason, /missing city, district/);
+  assert.match(report.rejected[0].reason, /missing city/);
 });
 
 test('preserves the multi-word 19 Mayıs district from a flat EPDK address', () => {
