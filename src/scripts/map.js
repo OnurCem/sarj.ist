@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { cityFocusStation, closestRegion, configureStationLocationLink, datasetPresentation, districtIdentity, distanceKm, escapeHtml, locationZoomLevel, normalizedSearch, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../lib/station-presentation.mjs';
+import { cityFocusStation, closestRegion, configureStationLocationLink, datasetPresentation, districtIdentity, distanceKm, escapeHtml, locationZoomLevel, normalizedSearch, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
@@ -12,7 +12,7 @@ let selected = null;
 let type = 'all';
 let visible = [];
 let dataView = datasetPresentation();
-let detailOpen = !window.matchMedia('(max-width:760px)').matches;
+let detailOpen = !window.matchMedia('(max-width:900px)').matches;
 let searchTimer;
 let currentPosition;
 let userLocationMarker;
@@ -39,40 +39,50 @@ const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 let tileLoaded = false;
 tiles.on('tileload', () => { tileLoaded = true; $('#map-error').hidden = true; });
-tiles.on('tileerror', () => { if (!tileLoaded) $('#map-error').hidden = false; });
+tiles.on('tileerror', () => { if (!tileLoaded) { $('#map-error').hidden = false; renderViewportList(); } });
 
 function markerIcon(station) {
   return L.divIcon({
     className: 'charger-marker',
-    html: `<div class="charger-pin ${station.type === 'AC' ? 'ac' : ''} ${station.id === selected ? 'chosen' : ''}">${icon('socket')}${station.type === 'DC' ? icon('bolt') : ''}${station.power}</div>`,
-    iconSize: [82, 42],
-    iconAnchor: [41, 47],
+    html: `<div class="charger-pin ${station.type === 'AC' ? 'ac' : ''} ${station.id === selected ? 'chosen' : ''}">${icon(station.type === 'DC' ? 'bolt' : 'plug')}</div>`,
+    iconSize: [36, 44],
+    iconAnchor: [18, 44],
   });
 }
 
-function operatorMark(station) {
+function operatorMark(station, compact = false) {
   const operator = escapeHtml(station.operator);
-  return `<span class="operator-mark" aria-label="${operator}" title="${operator}">${escapeHtml(operatorBadgeLabel(station.operator))}</span>`;
+  return `<span class="operator-mark" aria-label="${operator}" title="${operator}">${escapeHtml(compact ? operatorBadgeLabel(station.operator).replace(/\s+/g, '').slice(0, 3) : operatorBadgeLabel(station.operator))}</span>`;
 }
 
 function card(station) {
-  const title = escapeHtml(station.name.split(' · ')[0]);
+  // Imported all-caps names retain every word, including distinguishing suffixes.
+  const name = station.name === station.name.toLocaleUpperCase('tr')
+    ? station.name.toLocaleLowerCase('tr').replace(/(^|[\s(/-])([\p{L}])/gu, (_, prefix, letter) => prefix + letter.toLocaleUpperCase('tr'))
+    : station.name;
+  const neighborhood = station.area.match(/^.*?\b(?:Mahallesi|Mah\.)/iu)?.[0];
+  const area = [station.operator, neighborhood].filter(Boolean).join(' · ');
   const distance = currentPosition ? distanceKm(currentPosition, station) : undefined;
   const distanceLabel = distance === undefined ? '' : `<span class="station-distance"> · ${distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toLocaleString('tr', { maximumFractionDigits: 1 })} km`}</span>`;
-  return `<button class="station-card ${station.id === selected ? 'selected' : ''}" data-id="${escapeHtml(station.id)}" aria-label="${escapeHtml(station.name)}, ${station.power} kW, detayları göster" aria-pressed="${station.id === selected}">${operatorMark(station)}<div class="station-copy"><h3>${title}<span> · Şarj noktası</span></h3><p class="station-area">${escapeHtml(station.area)}${station.access === 'Özel erişim' ? ' · Özel erişim' : ''}${distanceLabel}</p></div><div class="station-power ${station.type === 'AC' ? 'ac' : ''}"><strong>${station.type} ${station.power} kW</strong><span>${station.sockets} soket</span></div><svg class="station-arrow" aria-hidden="true"><use href="#chevron"/></svg></button>`;
+  return `<button class="station-card ${station.id === selected ? 'selected' : ''}" data-id="${escapeHtml(station.id)}" aria-label="${escapeHtml(station.name)}, ${station.power} kW, detayları göster" aria-pressed="${station.id === selected}">${operatorMark(station, true)}<div class="station-copy"><h3>${escapeHtml(name)}</h3><p class="station-area">${escapeHtml(area)}</p><p class="station-city">${escapeHtml(station.district)} / ${escapeHtml(station.city)}</p><div class="station-meta"><strong class="station-power ${station.type === 'AC' ? 'ac' : ''}">${icon(station.type === 'DC' ? 'bolt' : 'plug')}${station.type} ${station.power} kW</strong><span> · ${station.sockets} soket</span>${distanceLabel}</div></div><svg class="station-arrow" aria-hidden="true"><use href="#chevron"/></svg></button>`;
 }
 
 function renderDetail() {
   const station = stations.find(({ id }) => id === selected);
   const detail = $('#station-detail');
   detail.hidden = !detailOpen || !station;
+  const modal = !detail.hidden && window.matchMedia('(max-width:900px)').matches;
+  detail.setAttribute('aria-modal', String(modal));
+  for (const selector of ['.topbar', '.search-section', '.results-heading', '#station-list', '#map', '.map-top', '.map-controls', '#expand-map', '#mobile-toggle']) {
+    $(selector).inert = modal;
+  }
   if (detail.hidden) return;
 
   const routeAction = dataView.isSample
     ? `<button class="primary" id="sample-route">${icon('pin')}Konum hakkında</button>`
     : `<a class="primary" id="location-link" href="${stationLocationUrl(station)}" target="_blank" rel="noopener noreferrer">${icon('pin')}Konumu aç</a>`;
-  detail.innerHTML = `<div class="detail-top">${operatorMark(station)}<span class="detail-access">${escapeHtml(station.access)}</span><button class="close-detail" aria-label="İstasyon detayını kapat">${icon('close')}</button></div><h2>${escapeHtml(station.name)}</h2><p class="detail-address">${icon('pin')}${escapeHtml(station.area)}</p><div class="detail-specs"><div>${icon('socket')}<strong>${station.type}</strong><small>Şarj türü</small></div><div>${icon('bolt')}<strong>${station.power} kW</strong><small>Azami güç</small></div><div>${icon('plug')}<strong>${station.sockets} soket</strong><small>Soket sayısı</small></div></div>${routeAction}`;
-  $('.close-detail').addEventListener('click', () => {
+  detail.innerHTML = `<div class="detail-top">${operatorMark(station)}<span class="detail-access">${escapeHtml(station.access)}</span><button class="close-detail" aria-label="İstasyon detayını kapat">${icon('close')}</button></div><h2>${escapeHtml(station.name)}</h2><p class="detail-address">${icon('pin')}${escapeHtml(station.area)}</p><div class="detail-specs"><div>${icon('socket')}<strong>${station.type}</strong><small>Şarj türü</small></div><div>${icon('bolt')}<strong>${station.power} kW</strong><small>Azami güç</small></div><div>${icon('plug')}<strong>${station.sockets} soket</strong><small>Soket sayısı</small></div></div>${currentPosition ? '<p class="distance-note">Mesafeler paylaştığın konumdan kuş uçuşu hesaplanır.</p>' : ''}${routeAction}`;
+  detail.querySelector('.close-detail').addEventListener('click', () => {
     detailOpen = false;
     renderDetail();
     document.querySelector(`.station-card[data-id="${CSS.escape(selected)}"]`)?.focus();
@@ -87,12 +97,11 @@ function selectStation(id, fromMap = false) {
   render();
   const station = stations.find((candidate) => candidate.id === id);
   if (!station) return;
-  if (window.matchMedia('(max-width:760px)').matches) setMapMode(true);
   if (!fromMap) {
-    const narrow = window.matchMedia('(max-width:760px)').matches;
+    const narrow = window.matchMedia('(max-width:900px)').matches;
     const showStation = () => {
       const point = map.project([station.lat, station.lng], map.getZoom());
-      const offset = narrow ? L.point(0, 120) : L.point(-150, 0);
+      const offset = narrow ? L.point(0, 0) : L.point(-150, 0);
       map.panTo(map.unproject(point.add(offset), map.getZoom()), { animate: !window.matchMedia('(prefers-reduced-motion: reduce)').matches });
     };
     const marker = markers.get(id);
@@ -100,9 +109,11 @@ function selectStation(id, fromMap = false) {
     else showStation();
   }
   renderDetail();
+  $('#station-detail').focus({ preventScroll: true });
 }
 
 function render() {
+  updateAdvancedCount();
   const query = normalizedSearch($('#search-input').value);
   visible = stations.filter((station) => (
     (focusedDistrict === null || (station.citySlug === currentRegionSlug && districtIdentity(station.district) === focusedDistrict))
@@ -140,7 +151,7 @@ function renderViewportList() {
   if (currentRegionSlug === 'all' && !currentPosition) {
     $('#map-region-name').textContent = `${countryOverview ? 'Türkiye geneli' : 'Harita alanı'} · ${inView.length.toLocaleString('tr')} istasyon`;
   }
-  if (!mapReady || !shouldShowStationList(map.getZoom())) {
+  if (mapReady && !shouldShowStationList(map.getZoom()) && $('#map-error').hidden) {
     $('#station-list').innerHTML = '<div class="empty station-list-zoom-hint"><strong>Listeyi görmek için haritayı yakınlaştır.</strong></div>';
     return;
   }
@@ -165,12 +176,11 @@ function populateOperators() {
 }
 
 function populateRegions() {
-  $('#region-select').innerHTML = regions.map((region) => `<option value="${escapeHtml(region.slug)}">${escapeHtml(region.name)} (${region.count})</option>`).join('');
+  $('#region-select').innerHTML = regions.map((region) => `<option value="${escapeHtml(region.slug)}">${escapeHtml(region.name)}</option>`).join('');
 }
 
 function setRegionLabels(region) {
   const nationwide = region.slug === 'all';
-  $('#city-intro-copy').textContent = nationwide ? 'Türkiye genelindeki şarj noktalarını keşfet.' : `${region.name} ve çevresindeki şarj noktalarını keşfet.`;
   $('#region-heading').textContent = 'Haritadaki istasyonlar';
   $('#map-region-name').textContent = focusedDistrict !== null ? `${focusedDistrict || 'İlçe belirtilmemiş'}, ${region.name}` : nationwide ? 'Türkiye geneli' : `${region.name}, Türkiye`;
 }
@@ -180,6 +190,7 @@ function clearFiltersWithoutRendering({ preserveSearch = false } = {}) {
   $('#operator').value = 'all';
   $('#private').checked = true;
   type = 'all';
+  $('#charge-type').value = type;
   document.querySelectorAll('[data-type]').forEach((button) => {
     button.classList.toggle('active', button.dataset.type === type);
     button.setAttribute('aria-pressed', String(button.dataset.type === type));
@@ -212,8 +223,8 @@ function fitMapToStations(targetStations = visible) {
     return;
   }
   map.fitBounds(targetStations.map(({ lat, lng }) => [lat, lng]), {
-    paddingTopLeft: window.matchMedia('(max-width:760px)').matches ? [50, 70] : [490, 90],
-    paddingBottomRight: [90, 120],
+    paddingTopLeft: window.matchMedia('(max-width:900px)').matches ? [20, 20] : [50, 50],
+    paddingBottomRight: [50, 50],
     maxZoom: 14,
   });
 }
@@ -288,10 +299,7 @@ async function locateUser() {
       zIndexOffset: 2000,
     }).addTo(map);
     render();
-    if (window.matchMedia('(max-width:760px)').matches) {
-      setMapMode(true);
-      map.invalidateSize({ pan: false });
-    }
+    map.invalidateSize({ pan: false });
     map.setView([coordinates.lat, coordinates.lng], locationZoomLevel(position.coords.accuracy), { animate: false });
     $('#map-region-name').textContent = userLocationLabel(coordinates, position.coords.accuracy, stations, region);
     hideLocationStatus();
@@ -300,16 +308,6 @@ async function locateUser() {
     showLocationStatus(denied ? 'Konum izni verilmedi. Şehir adını arayabilir veya listeden seçebilirsin.' : 'Konum alınamadı. Şehir adını arayabilir veya listeden seçebilirsin.');
   } finally {
     buttons.forEach((button) => { button.removeAttribute('aria-busy'); button.disabled = false; });
-  }
-}
-
-async function locateUserIfGranted() {
-  if (!navigator.geolocation || !navigator.permissions?.query) return;
-  try {
-    const permission = await navigator.permissions.query({ name: 'geolocation' });
-    if (shouldAutoLocate(permission.state, new URLSearchParams(window.location.search).has('sehir'))) await locateUser();
-  } catch {
-    // Permission queries are not supported consistently; the location buttons remain available.
   }
 }
 
@@ -348,6 +346,7 @@ function resetFilters() {
 
 function setType(value) {
   type = value;
+  $('#charge-type').value = type;
   document.querySelectorAll('[data-type]').forEach((button) => {
     button.classList.toggle('active', button.dataset.type === type);
     button.setAttribute('aria-pressed', String(button.dataset.type === type));
@@ -356,9 +355,16 @@ function setType(value) {
 }
 
 function setMapMode(enabled) {
+  const center = map.getCenter();
+  const zoom = map.getZoom();
   $('.workspace').classList.toggle('map-mode', enabled);
-  $('#mobile-toggle span').textContent = enabled ? 'Listeyi göster' : 'Haritayı göster';
-  requestAnimationFrame(() => map.invalidateSize());
+  $('#expand-map').setAttribute('aria-expanded', String(enabled));
+  if (!enabled) detailOpen = false;
+  renderDetail();
+  (enabled ? $('#mobile-toggle') : $('#expand-map')).focus({ preventScroll: true });
+  const fullMap = enabled || !window.matchMedia('(max-width:900px)').matches;
+  if (fullMap) map.scrollWheelZoom.enable(); else map.scrollWheelZoom.disable();
+  requestAnimationFrame(() => { map.invalidateSize({ pan: false }); map.setView(center, zoom, { animate: false }); renderViewportList(); });
 }
 
 document.querySelectorAll('[data-type]').forEach((button) => button.addEventListener('click', () => setType(button.dataset.type)));
@@ -373,11 +379,37 @@ $('#search-input').addEventListener('input', () => {
 $('#operator').addEventListener('change', render);
 $('#region-select').addEventListener('change', () => loadRegion($('#region-select').value));
 $('#private').addEventListener('change', render);
+function updateAdvancedCount() {
+  const count = Number($('#operator').value !== 'all') + Number(!$('#private').checked);
+  $('#filter-count').textContent = String(count);
+  $('#filter-count').hidden = count === 0;
+}
+function closeFilters() { $('#extra-filters').close(); }
 $('#filters-button').addEventListener('click', () => {
-  const expanded = $('#filters-button').getAttribute('aria-expanded') === 'true';
-  $('#filters-button').setAttribute('aria-expanded', String(!expanded));
-  $('#extra-filters').hidden = expanded;
-  if (!expanded) requestAnimationFrame(() => $('#extra-filters').scrollIntoView({ block: 'nearest' }));
+  const filters = $('#extra-filters');
+  if (filters.open) closeFilters();
+  else {
+    $('#filters-button').setAttribute('aria-expanded', 'true');
+    if (window.matchMedia('(max-width:900px)').matches) filters.showModal();
+    else filters.show();
+    $('#operator').focus();
+  }
+});
+$('#extra-filters').addEventListener('close', () => {
+  $('#filters-button').setAttribute('aria-expanded', 'false');
+  $('#filters-button').focus();
+});
+$('#close-filters').addEventListener('click', closeFilters);
+$('#apply-filters').addEventListener('click', closeFilters);
+$('#reset-advanced').addEventListener('click', () => {
+  $('#operator').value = 'all'; $('#private').checked = true; render();
+});
+$('#charge-type').addEventListener('change', () => setType($('#charge-type').value));
+$('#expand-map').addEventListener('click', () => setMapMode(true));
+const responsiveLayout = window.matchMedia('(max-width:900px)');
+if (responsiveLayout.matches) map.scrollWheelZoom.disable();
+responsiveLayout.addEventListener('change', () => {
+  closeFilters(); setMapMode(false);
 });
 $('#zoom-in').addEventListener('click', () => { userMapNavigation = true; map.zoomIn(); });
 $('#zoom-out').addEventListener('click', () => { userMapNavigation = true; map.zoomOut(); });
@@ -403,8 +435,18 @@ map.on('moveend', () => {
 $('#about-button').addEventListener('click', () => $('#about-dialog').showModal());
 document.querySelectorAll('#about-dialog .dialog-close, .dialog-done').forEach((button) => button.addEventListener('click', () => $('#about-dialog').close()));
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Tab' && $('#station-detail').getAttribute('aria-modal') === 'true') {
+    const controls = $('#station-detail').querySelectorAll('button, a[href]');
+    const first = controls[0]; const last = controls[controls.length - 1];
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === $('#station-detail'))) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
   if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase('tr') === 'k') { event.preventDefault(); setMapMode(false); $('#search-input').focus(); }
-  if (event.key === 'Escape' && detailOpen) { detailOpen = false; renderDetail(); }
+  if (event.key === 'Escape') {
+    if ($('#extra-filters').open) closeFilters();
+    else if (detailOpen) { detailOpen = false; renderDetail(); document.querySelector(`.station-card[data-id="${CSS.escape(selected)}"]`)?.focus(); }
+    else if ($('.workspace').classList.contains('map-mode')) setMapMode(false);
+  }
 });
 
 const routeDialog = document.createElement('dialog');
@@ -417,9 +459,7 @@ window.addEventListener('popstate', () => {
   const district = new URLSearchParams(window.location.search).get('ilce');
   if (slug && (slug !== currentRegionSlug || district !== focusedDistrict)) loadRegion(slug, { updateUrl: false, district });
 });
-initializeRegions().then((loaded) => {
-  if (loaded) locateUserIfGranted();
-});
+initializeRegions();
 
 // Optional agent interface: it shares the same filtering state as the UI.
 if (document.modelContext?.registerTool) {

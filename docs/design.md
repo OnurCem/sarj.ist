@@ -27,13 +27,16 @@ The default view shows all of Turkey. Marker clusters and result counts represen
 - Browser geolocation is requested only after a user action and focuses nearby stations.
 - AC/DC, operator, and private-access controls filter the visible results.
 - Selecting a station opens its details and an external navigation link.
-- Mobile uses a list-first layout with a persistent map/list toggle.
+- Desktop uses a flush 360–465px sidebar beneath a 64px header. Search, filters, and the results heading remain stationary while the station list scrolls beside the map.
+- At 900px and below, a 300px map preview sits between compact search/filter controls and the naturally scrolling station list. “Haritayı genişlet” opens a full map with a reserved “Listeye dön” action.
+- Operator and private-access filters open in a desktop popover or a mobile sheet. Selections persist across map views.
+- Station rows use small operator badges, complete accessible names, compact neighborhood information, inline power/socket/distance metadata, and matching selected pins. Mobile station details use a dismissible sheet with keyboard focus contained within it.
 
-The interface displays EPDK's last successful refresh date and explicitly states that availability, pricing, and operating status are not live.
+Source and refresh information are available through help. City guides and legal links also live in secondary navigation, keeping the discovery viewport clear. The discovery screens omit availability warnings and do not imply live availability, pricing, or operating status.
 
 ## Accessibility
 
-Controls have visible keyboard focus, reduced-motion support, text labels for icon actions, and status messages for location and map failures. Primary action text has a 15.18:1 calculated sRGB contrast ratio; secondary text on selected rows has a 6.11:1 ratio. These checks support the palette specification but do not replace full assistive-technology testing.
+Controls indicate keyboard focus with a surface change rather than outlines, reduced-motion support, text labels for icon actions, and status messages for location and map failures. Primary action text has a 15.18:1 calculated sRGB contrast ratio; secondary text on selected rows has a 6.11:1 ratio. These checks support the palette specification but do not replace full assistive-technology testing.
 
 ## Brand assets
 

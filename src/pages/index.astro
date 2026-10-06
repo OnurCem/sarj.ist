@@ -1,9 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { dataset, stations } from '../data/stations';
+import { dataset } from '../data/stations';
 import { datasetPresentation } from '../lib/station-presentation.mjs';
 
-const cities = [...new Map(stations.map(({ citySlug, city }) => [citySlug, city])).entries()].sort((a, b) => a[1].localeCompare(b[1], 'tr'));
 const dataView = datasetPresentation(dataset);
 ---
 <BaseLayout title="Türkiye Şarj İstasyonları Haritası | şarj.ist" description="Türkiye şarj istasyonlarını şehir, ilçe, operatör, AC/DC ve kayıtlı güç bilgileriyle bul. İstasyonları haritada keşfet ve erişim bilgilerini incele." canonicalPath="/">
@@ -21,21 +20,32 @@ const dataView = datasetPresentation(dataset);
     </svg>
     <header class="topbar">
       <a class="brand" href="/" aria-label="şarj.ist ana sayfa"><img src="/brand/mark.svg?v=3" width="39" height="39" alt=""/><span>şarj<span class="brand-light">.ist</span></span></a>
-      <nav aria-label="Ana menü"><span class="nav-current">İstasyonları keşfet</span><button id="about-button">Nasıl çalışır?</button></nav>
+      <nav aria-label="Ana menü"><a class="guides-link" href="/sehir/">Şehir rehberleri</a><button id="about-button">Nasıl çalışır?</button></nav>
     </header>
     <main class="workspace">
       <aside class="sidebar" aria-label="İstasyon arama ve sonuçları">
         <section class="search-section">
           
-          <h1>Şarj istasyonları,<br/>tek haritada.</h1>
-          <p id="city-intro"><span id="city-intro-copy">Türkiye genelindeki şarj noktalarını keşfet.</span> <a href="/sehir/">Şehir rehberine göz at.</a></p>
-          <details class="home-guides"><summary>Şehir şarj rehberleri</summary><nav aria-label="Şehir şarj rehberleri">{cities.map(([slug, city]) => <a href={`/sehir/${slug}/`}>{city}</a>)}</nav></details>
+          <h1>İstasyon bul</h1>
           <label class="searchbox"><svg><use href="#search"/></svg><input id="search-input" type="search" placeholder="Şehir, ilçe, istasyon veya operatör ara" aria-label="Haritada istasyon ara"/></label>
-          <label class="city-picker"><span>Şehir (isteğe bağlı)</span><select id="region-select" aria-label="İsteğe bağlı şehir seçimi"><option value="all">Türkiye geneli</option></select></label>
-          <button id="locate-me-list" class="nearby-button" type="button"><svg><use href="#target"/></svg>Konumuma yakın istasyonlar</button>
+          <div class="location-row">
+            <label class="city-picker"><svg aria-hidden="true"><use href="#pin"/></svg><select id="region-select" aria-label="Şehir seçimi"><option value="all">Türkiye geneli</option></select></label>
+            <button id="locate-me-list" class="nearby-button" type="button"><svg><use href="#target"/></svg>Konumumu kullan</button>
+          </div>
           <p class="sidebar-location-status location-status-message" role="status" hidden></p>
-          <div class="quick-filters" aria-label="Şarj türü"><button class="chip active" data-type="all" aria-pressed="true">Tümü</button><button class="chip" data-type="DC" aria-pressed="false"><svg><use href="#bolt"/></svg>DC · Hızlı</button><button class="chip" data-type="AC" aria-pressed="false"><svg><use href="#plug"/></svg>AC</button><button class="chip filter-button" id="filters-button" aria-expanded="false" aria-controls="extra-filters" aria-label="Diğer filtreler"><svg><use href="#filter"/></svg></button></div>
-          <div id="extra-filters" hidden><label>Operatör<select id="operator"><option value="all">Tüm operatörler</option></select></label><label class="check-label"><input type="checkbox" id="private" checked/>Özel erişimli istasyonları dahil et</label></div>
+          <div class="quick-filters" aria-label="Şarj türü">
+            <button class="chip active" data-type="all" aria-pressed="true">Tümü</button>
+            <button class="chip" data-type="DC" aria-pressed="false"><svg><use href="#bolt"/></svg>DC</button>
+            <button class="chip" data-type="AC" aria-pressed="false"><svg><use href="#plug"/></svg>AC</button>
+            <label class="mobile-type"><select id="charge-type" aria-label="Şarj türü"><option value="all">Tümü</option><option value="DC">DC</option><option value="AC">AC</option></select></label>
+            <button class="chip filter-button" id="filters-button" aria-expanded="false" aria-controls="extra-filters"><svg><use href="#filter"/></svg>Filtreler<span id="filter-count" hidden></span></button>
+          </div>
+          <dialog id="extra-filters" aria-labelledby="filters-title">
+            <div class="filter-heading"><h2 id="filters-title">Filtreler</h2><button id="close-filters" class="close-detail" aria-label="Filtreleri kapat"><svg><use href="#close"/></svg></button></div>
+            <label class="operator-filter">Operatör<select id="operator"><option value="all">Tüm operatörler</option></select></label>
+            <label class="check-label"><input type="checkbox" id="private" checked/>Özel erişimli istasyonları dahil et</label>
+            <div class="filter-actions"><button id="reset-advanced">Temizle</button><button id="apply-filters" class="primary">Uygula</button></div>
+          </dialog>
         </section>
         <div class="results-heading"><h2 id="region-heading">Haritadaki istasyonlar</h2><span id="result-count"></span></div>
         <div class="station-list" id="station-list" aria-live="polite"><div class="empty">İstasyonlar yükleniyor…</div></div>
@@ -46,11 +56,12 @@ const dataView = datasetPresentation(dataset);
         
         <div class="map-controls"><button id="zoom-in" aria-label="Haritayı yakınlaştır"><svg><use href="#plus"/></svg></button><button id="zoom-out" aria-label="Haritayı uzaklaştır"><svg><use href="#minus"/></svg></button></div>
         <div class="map-legend"><span><i class="dc-dot"></i>DC hızlı şarj</span><span><i class="ac-dot"></i>AC şarj</span></div>
-        <article id="station-detail" class="detail-card" hidden aria-label="İstasyon detayları"></article>
+        <article id="station-detail" class="detail-card" hidden role="dialog" tabindex="-1" aria-label="İstasyon detayları"></article>
+        <button id="expand-map" class="expand-map">Haritayı genişlet <svg><use href="#arrow"/></svg></button>
         <div id="map-error" class="map-error" hidden>Harita yüklenemedi. İstasyonları listeden inceleyebilirsin.</div>
       </section>
-      <button id="mobile-toggle" class="mobile-toggle"><svg><use href="#pin"/></svg><span>Haritayı göster</span></button>
+      <button id="mobile-toggle" class="mobile-toggle"><svg><use href="#pin"/></svg><span>Listeye dön</span></button>
     </main>
-    <dialog id="about-dialog"><button class="dialog-close" aria-label="Kapat"><svg><use href="#close"/></svg></button><div class="dialog-brand" aria-label="şarj.ist"><span class="dialog-brand-mark" aria-hidden="true"></span><span>şarj<span class="brand-light">.ist</span></span></div><h2>Şarj noktaları,<br/>tek haritada.</h2><p>İstasyonları haritada keşfet, AC veya DC şarj türüne göre filtrele ve bir istasyon seçerek detaylarını gör.</p><p id="about-data-copy">{dataView.about}</p><button class="primary dialog-done">Keşfetmeye başla <svg><use href="#arrow"/></svg></button></dialog>
+    <dialog id="about-dialog"><button class="dialog-close" aria-label="Kapat"><svg><use href="#close"/></svg></button><div class="dialog-brand" aria-label="şarj.ist"><span class="dialog-brand-mark" aria-hidden="true"></span><span>şarj<span class="brand-light">.ist</span></span></div><h2>Şarj noktaları,<br/>tek haritada.</h2><p>İstasyonları haritada keşfet, AC veya DC şarj türüne göre filtrele ve bir istasyon seçerek detaylarını gör.</p><p id="about-data-copy">{dataView.about}</p><nav class="help-links" aria-label="Yardım bağlantıları"><a href="/sehir/">Şehir rehberleri</a><a href="/privacy/">Gizlilik</a><a href="/licenses/">Lisanslar</a></nav><button class="primary dialog-done">Keşfetmeye başla <svg><use href="#arrow"/></svg></button></dialog>
     <script src="../scripts/map.js"></script>
 </BaseLayout>
