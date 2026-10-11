@@ -33,7 +33,6 @@ const dataView = datasetPresentation(dataset);
             <div class="city-picker"><CustomSelect id="region-select" label="Şehir seçimi" valueLabel="Türkiye geneli" searchable icon="pin"><option value="all">Türkiye geneli</option></CustomSelect></div>
             <button id="locate-me-list" class="nearby-button" type="button"><svg><use href="#target"/></svg>Konumumu kullan</button>
           </div>
-          <p class="sidebar-location-status location-status-message" role="status" hidden></p>
           <div class="quick-filters" aria-label="Şarj türü">
             <button class="chip active" data-type="all" aria-pressed="true">Tümü</button>
             <button class="chip" data-type="DC" aria-pressed="false"><svg><use href="#bolt"/></svg>DC</button>
@@ -53,7 +52,7 @@ const dataView = datasetPresentation(dataset);
       </aside>
       <section class="map-region" aria-label="Şarj istasyonları haritası">
         <div id="map"></div>
-        <div class="map-top"><div class="location-pill"><svg><use href="#pin"/></svg><strong id="map-region-name">Türkiye geneli</strong></div><button id="locate-me" class="map-action locate-me" aria-label="Konumumu kullan" title="Yakındaki istasyonları göster"><svg><use href="#target"/></svg></button><p id="location-status" class="location-status location-status-message" aria-hidden="true" hidden></p></div>
+        <div class="map-top"><div class="location-pill"><svg><use href="#pin"/></svg><strong id="map-region-name">Türkiye geneli</strong></div><button id="locate-me" class="map-action locate-me" aria-label="Konumumu kullan" title="Yakındaki istasyonları göster"><svg><use href="#target"/></svg></button><p id="location-status" class="location-status location-status-message" role="status" hidden></p></div>
         
         <div class="map-controls"><button id="zoom-in" aria-label="Haritayı yakınlaştır"><svg><use href="#plus"/></svg></button><button id="zoom-out" aria-label="Haritayı uzaklaştır"><svg><use href="#minus"/></svg></button></div>
         <div class="map-legend"><span><i class="dc-dot"></i>DC hızlı şarj</span><span><i class="ac-dot"></i>AC şarj</span></div>

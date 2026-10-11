@@ -106,7 +106,6 @@ body:has(#station-detail[aria-modal="true"]) { overflow: hidden; }
   .mobile-type { display: flex; flex: 1; min-width: 0; }
   .mobile-type select { width: 100%; max-width: none; height: 44px; font-size: 16px; background: var(--raised); }
   .workspace .filter-button { flex: 1.2; padding: 0 6px; font-size: 14px; }
-  .workspace .sidebar-location-status { grid-column: 1 / -1; margin: 0 !important; }
   .workspace .map-region { grid-area: map; height: 300px; z-index: 0; }
   .workspace .map-top { top: 12px; right: 12px; }
   .workspace .map-controls, .workspace .map-legend { display: none; }
@@ -128,7 +127,6 @@ body:has(#station-detail[aria-modal="true"]) { overflow: hidden; }
   .workspace.map-mode .mobile-toggle { display: flex; grid-area: return; position: static; transform: none; justify-content: center; width: 100%; border: 0; border-radius: 0; padding: 0 16px; box-shadow: none; background: var(--surface); color: var(--ink); }
   body:has(.map-mode) { overflow: hidden; }
   .workspace .map-error { top: 10px; left: 10px; right: 66px; font-size: 12px; }
-  .workspace .location-status { top: 50px; right: 0; left: auto; max-width: calc(100vw - 24px); }
 }
 
 /* Custom filter menus share the discovery palette and never invoke OS pickers. */
@@ -178,3 +176,6 @@ body:has(#station-detail[aria-modal="true"]) { overflow: hidden; }
   .workspace .city-picker { flex: 1.2; }
   .workspace .nearby-button { font-size: 12px; }
 }
+
+/* Location feedback stays beside the map action, outside the filter grid. */
+.workspace .location-status { top: 0; right: 56px; left: auto; width: 260px; max-width: calc(100vw - 90px); }
