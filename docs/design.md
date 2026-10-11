@@ -24,8 +24,8 @@ The default view shows all of Turkey. Marker clusters and result counts represen
 
 - Search matches province, district, station name, and operator.
 - Selecting a province is optional and focuses the map without excluding neighboring provinces.
-- Browser geolocation is requested only after a user action and focuses nearby stations.
-- AC/DC, operator, and private-access controls filter the visible results.
+- Browser geolocation focuses nearby stations automatically when permission is already granted. An explicit city/district link or user interaction takes priority. When permission is undecided or denied, location is requested only through the location button.
+- AC/DC, operator, and private-access controls filter the visible results. City, charging-type, and operator pickers use custom menus with selected-state marks, keyboard navigation, and searchable city/operator lists. Below 361px, the city picker occupies its own row to keep labels readable.
 - Selecting a station opens its details and an external navigation link.
 - Desktop uses a flush 360–465px sidebar beneath a 64px header. Search, filters, and the results heading remain stationary while the station list scrolls beside the map.
 - At 900px and below, a 300px map preview sits between compact search/filter controls and the naturally scrolling station list. “Haritayı genişlet” opens a full map with a reserved “Listeye dön” action.

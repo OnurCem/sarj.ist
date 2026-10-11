@@ -1,0 +1,17 @@
+---
+interface Props { id: string; label: string; valueLabel: string; searchable?: boolean; icon?: string }
+const { id, label, valueLabel, searchable = false, icon } = Astro.props;
+---
+<div class="custom-select" data-select={id}>
+  <select id={id} aria-label={label} hidden><slot /></select>
+  <button type="button" class="select-trigger" role="combobox" aria-label={`${label}: ${valueLabel}`} aria-haspopup="listbox" aria-expanded="false" aria-controls={`${id}-options`}>
+    {icon && <svg class="select-icon" aria-hidden="true"><use href={`#${icon}`}/></svg>}
+    <span class="select-value">{valueLabel}</span>
+    <svg class="select-chevron" aria-hidden="true"><use href="#chevron"/></svg>
+  </button>
+  <div class="select-menu" popover="auto" id={`${id}-menu`}>
+    {searchable && <label class="select-search"><svg aria-hidden="true"><use href="#search"/></svg><input type="search" placeholder={id === 'operator' ? 'Operatör ara' : 'Şehir ara'} aria-label={id === 'operator' ? 'Operatör ara' : 'Şehir ara'} autocomplete="off" /></label>}
+    <div class="select-options" id={`${id}-options`} role="listbox" aria-label={label}></div>
+    <p class="select-empty" role="status" hidden>Sonuç bulunamadı.</p>
+  </div>
+</div>

@@ -130,3 +130,51 @@ body:has(#station-detail[aria-modal="true"]) { overflow: hidden; }
   .workspace .map-error { top: 10px; left: 10px; right: 66px; font-size: 12px; }
   .workspace .location-status { top: 50px; right: 0; left: auto; max-width: calc(100vw - 24px); }
 }
+
+/* Custom filter menus share the discovery palette and never invoke OS pickers. */
+.custom-select { min-width: 0; width: 100%; }
+.workspace .city-picker { padding: 0; }
+.select-trigger { width: 100%; min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 9px; background: var(--raised); color: var(--ink); text-align: left; font-size: 14px; }
+.city-picker .select-trigger { height: 48px; }
+.select-value { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.select-trigger .select-icon { width: 18px; height: 18px; color: var(--accent); }
+.select-trigger .select-chevron { width: 16px; height: 16px; transition: transform .15s; }
+.select-trigger[aria-expanded="true"] { background: var(--selected); }
+.select-trigger[aria-expanded="true"] .select-chevron { transform: rotate(180deg); }
+.select-trigger:hover, .select-trigger:focus-visible { background: var(--selected); }
+.select-trigger:disabled { opacity: .5; cursor: wait; }
+.select-menu { position: fixed; inset: auto; margin: 0; padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); box-shadow: 0 12px 36px #0005; overflow: hidden; font-size: 14px; }
+.select-menu:popover-open { display: flex; flex-direction: column; }
+.select-menu::backdrop { background: transparent; }
+.select-search { display: flex; align-items: center; gap: 8px; flex-shrink: 0; min-height: 44px; padding: 0 10px; margin-bottom: 8px; border-radius: 8px; background: var(--raised); color: var(--muted); }
+.select-search input { width: 100%; min-width: 0; height: 44px; padding: 0; border: 0; outline: none; background: transparent; color: var(--ink); font-size: 16px; }
+.select-search:focus-within { background: var(--selected); }
+.select-search input::placeholder { color: var(--muted); }
+.select-options { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--control-line) transparent; }
+.select-option { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 11px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); text-align: left; line-height: 1.4; }
+.select-option > span:first-child { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.select-option[aria-selected="true"] { background: var(--selected); color: var(--accent); font-weight: 600; }
+.select-option:hover, .workspace .select-option:focus-visible { background: var(--raised); outline: none; }
+.select-check { visibility: hidden; flex-shrink: 0; color: var(--accent); }
+.select-option[aria-selected="true"] .select-check { visibility: visible; }
+.select-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 14px; }
+.workspace .operator-filter { display: grid; gap: 8px; }
+@media (max-width: 900px) {
+  .workspace .search-section { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
+  .workspace .city-picker { padding: 0; }
+  .city-picker .select-trigger { height: 44px; padding: 0 8px; gap: 4px; }
+  .workspace .quick-filters { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
+  .mobile-type .select-trigger { padding: 0 8px; gap: 4px; }
+  .workspace .filter-button { min-width: 0; }
+}
+@media (max-width: 360px) {
+  .workspace .search-section { grid-template-columns: minmax(0, 1fr); }
+  .workspace .search-section > .city-picker, .workspace .quick-filters { grid-column: 1 / -1; }
+}
+.workspace .city-picker .select-trigger { padding: 0 8px; gap: 4px; }
+.workspace .city-picker .select-chevron { width: 14px; height: 14px; }
+@media (min-width: 901px) and (max-width: 1200px) {
+  .workspace .search-section { padding: 20px; }
+  .workspace .city-picker { flex: 1.2; }
+  .workspace .nearby-button { font-size: 12px; }
+}

@@ -1,9 +1,11 @@
+import { setupCustomSelects } from './custom-select.js';
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { cityFocusStation, closestRegion, configureStationLocationLink, datasetPresentation, districtIdentity, distanceKm, escapeHtml, locationZoomLevel, normalizedSearch, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../lib/station-presentation.mjs';
+import { cityFocusStation, closestRegion, configureStationLocationLink, datasetPresentation, districtIdentity, distanceKm, escapeHtml, locationZoomLevel, normalizedSearch, operatorBadgeLabel, operatorNames, regionFromQuery, regionSlugFromSearch, shouldAutoLocate, shouldShowStationList, stationLocationUrl, userLocationLabel } from '../lib/station-presentation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
+const syncSelects = setupCustomSelects();
 const MAX_LIST_RESULTS = 200;
 let stations = [];
 let regions = [];
@@ -20,6 +22,13 @@ let userMapNavigation = false;
 let mapReady = false;
 let countryOverview = false;
 let focusedDistrict = null;
+let discoveryInteracted = false;
+let locationRequest = 0;
+const initialParams = new URLSearchParams(window.location.search);
+const hasRequestedRegion = initialParams.has('sehir') || initialParams.has('ilce');
+for (const event of ['pointerdown', 'keydown', 'input']) {
+  $('.workspace').addEventListener(event, () => { discoveryInteracted = true; }, { once: true, capture: true });
+}
 const markers = new Map();
 
 const map = L.map('map', { zoomControl: false, scrollWheelZoom: true, maxZoom: 19 }).setView([41.08, 28.99], 13);
@@ -113,6 +122,7 @@ function selectStation(id, fromMap = false) {
 }
 
 function render() {
+  syncSelects();
   updateAdvancedCount();
   const query = normalizedSearch($('#search-input').value);
   visible = stations.filter((station) => (
@@ -180,6 +190,7 @@ function populateRegions() {
 }
 
 function setRegionLabels(region) {
+  syncSelects();
   const nationwide = region.slug === 'all';
   $('#region-heading').textContent = 'Haritadaki istasyonlar';
   $('#map-region-name').textContent = focusedDistrict !== null ? `${focusedDistrict || 'İlçe belirtilmemiş'}, ${region.name}` : nationwide ? 'Türkiye geneli' : `${region.name}, Türkiye`;
@@ -270,7 +281,8 @@ async function loadRegion(slug, { updateUrl = true, replaceUrl = false, preserve
   return true;
 }
 
-async function locateUser() {
+async function locateUser({ automatic = false } = {}) {
+  const request = ++locationRequest;
   if (!navigator.geolocation) {
     showLocationStatus('Tarayıcın konum paylaşımını desteklemiyor. Şehir adını arayabilirsin.');
     return;
@@ -284,10 +296,12 @@ async function locateUser() {
       timeout: 12_000,
       maximumAge: 300_000,
     }));
+    if (request !== locationRequest) return;
+    if (automatic && discoveryInteracted) { hideLocationStatus(); return; }
     const coordinates = { lat: position.coords.latitude, lng: position.coords.longitude };
     const region = closestRegion(coordinates, regions);
     if (!region) throw new Error('Yakın şehir bulunamadı');
-    const loaded = await loadRegion(region.slug, { preserveLocation: true, fitMap: false });
+    const loaded = await loadRegion(region.slug, { preserveLocation: true, fitMap: false, updateUrl: !automatic });
     if (!loaded) throw new Error('Yakındaki istasyonlar yüklenemedi');
     currentPosition = coordinates;
     if (userLocationMarker) map.removeLayer(userLocationMarker);
@@ -304,10 +318,23 @@ async function locateUser() {
     $('#map-region-name').textContent = userLocationLabel(coordinates, position.coords.accuracy, stations, region);
     hideLocationStatus();
   } catch (error) {
+    if (request !== locationRequest) return;
     const denied = error?.code === 1;
     showLocationStatus(denied ? 'Konum izni verilmedi. Şehir adını arayabilir veya listeden seçebilirsin.' : 'Konum alınamadı. Şehir adını arayabilir veya listeden seçebilirsin.');
   } finally {
-    buttons.forEach((button) => { button.removeAttribute('aria-busy'); button.disabled = false; });
+    if (request === locationRequest) buttons.forEach((button) => { button.removeAttribute('aria-busy'); button.disabled = false; });
+  }
+}
+
+async function locateUserIfGranted() {
+  if (hasRequestedRegion || discoveryInteracted || !navigator.geolocation || !navigator.permissions?.query) return;
+  try {
+    const permission = await navigator.permissions.query({ name: 'geolocation' });
+    if (shouldAutoLocate(permission.state, hasRequestedRegion) && !discoveryInteracted) {
+      await locateUser({ automatic: true });
+    }
+  } catch {
+    // When permission inspection is unsupported, the location buttons still work.
   }
 }
 
@@ -459,7 +486,9 @@ window.addEventListener('popstate', () => {
   const district = new URLSearchParams(window.location.search).get('ilce');
   if (slug && (slug !== currentRegionSlug || district !== focusedDistrict)) loadRegion(slug, { updateUrl: false, district });
 });
-initializeRegions();
+initializeRegions().then((loaded) => {
+  if (loaded) locateUserIfGranted();
+});
 
 // Optional agent interface: it shares the same filtering state as the UI.
 if (document.modelContext?.registerTool) {
