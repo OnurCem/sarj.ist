@@ -1,6 +1,6 @@
 # Search indexing implementation record
 
-Recorded 12 October 2026 (Europe/Istanbul). Code implemented locally; release and dashboard-only evidence pending. This record does not claim Google indexing success.
+Recorded 12 October 2026 (Europe/Istanbul). Code deployed and verified; dashboard-only evidence and Google indexing baseline remain pending. This record does not claim Google indexing success.
 
 ## Changes
 
@@ -44,9 +44,12 @@ The live path returns 404 directly, has no canonical, and is absent from the sit
 - Local preview: homepage, directory, Istanbul, Beşiktaş district, Zorlu public and Koç Holding private pages checked at 1440×900 and 390×844. Matching titles/canonicals, nonempty main content, no horizontal overflow, no framework overlay or application console errors. Keyboard activation reaches Istanbul from the homepage. Mobile map expansion and return work; guides hide only in the expanded map view.
 - Browser plugin unavailable; used bundled Playwright with installed headless Chrome (bundled browser executable absent). Screenshots and raw audit outputs are temporary files under `/tmp/sarj-indexing-audit/`.
 - Existing `smoke:deployment` and `monitor:production` checks passed against **the preceding production release**, not this implementation. Production reports commit `e6dd93bad057dbc60ea0c73ef1bfd7c37007971e`, 16,990 records, 81 cities, dataset refreshed `2026-10-12T09:19:29.612Z`.
-- **This implementation is not deployed.** Never upload the stale local build. Use the code-only workflow below to restore current production data and private alias/reconciliation history.
+- **Deployed successfully:** [code-only workflow run 38237394787](https://github.com/OnurCem/sarj.ist/actions/runs/38237394787), code commit `57d2a13dfd56581e94f8fe6fa2f485396e4bf98a`, Cloudflare version `01805501-73ef-4d36-bfd5-afe9d68699fb`. Upload completed 12 October 2026 at 13:38:08 Europe/Istanbul. All release stages succeeded; EPDK fetch, guard publication and reconciliation were skipped. Private state was restored and validated state published through the existing workflow.
+- Final release build used **16,990 real records / 81 cities**, preserving the production dataset refresh `2026-10-12T09:19:29.612Z`. Capacity: **18,107 files**, **1,893 remaining**, largest asset **5,856,200 bytes**. CI passed for the code commit.
+- Production browser verification also passed on the six representative routes at both desktop/mobile sizes: no application errors or overflow; keyboard guide links and mobile map expansion/return worked.
+- Post-release HTTP/content verification completed at **13:39:48 Europe/Istanbul**: homepage, directory, all five priority cities, Beşiktaş district and public/private station examples returned 200 with correct canonicals, new visible dataset/source text and essential CSS/JS responses. Trendlife remained 404. Production health identifies the deployed code commit; separate post-release smoke and canonical-monitor checks both passed.
 
-Release procedure after publishing this code: run GitHub Actions → **Production refresh and deploy**, choose the branch containing these changes, set `refresh_data=false`, `bootstrap=false`, and leave `recovery_url` empty. Preserve all private state objects. Confirm build/capacity, deploy, smoke, private-state publication and canonical-monitor stages. Verify the priority pages show the new content and correct canonicals, CSS/JS return 200, and 1104 still returns a real 404. Record the deployed commit and timestamp here. If availability/navigation regresses, roll back to the preceding successful Cloudflare deployment. Do not bootstrap or fetch EPDK to perform this release.
+Release procedure used (retain for subsequent code-only releases): run GitHub Actions → **Production refresh and deploy**, choose the branch containing these changes, set `refresh_data=false`, `bootstrap=false`, and leave `recovery_url` empty. Preserve all private state objects. Confirm build/capacity, deploy, smoke, private-state publication and canonical-monitor stages. Verify the priority pages show the new content and correct canonicals, CSS/JS return 200, and 1104 still returns a real 404. If availability/navigation regresses, roll back to the preceding successful Cloudflare deployment. Do not bootstrap or fetch EPDK to perform this release.
 
 ## Dashboard evidence to collect
 
@@ -70,13 +73,13 @@ For 1104, inspect private R2 history/reconciliation state or retained historical
 
 ## Priority tracking list — baseline prepared 12 October 2026
 
-| Priority URL | Pre-release HTTP | Search Console baseline | Post-release inspection |
+| Priority URL | HTTP verified 12 October | Search Console baseline | Post-release inspection |
 | --- | --- | --- | --- |
-| `https://sarj.ist/sehir/` | 200 | Pending dashboard export | Pending release |
-| `https://sarj.ist/sehir/istanbul/` | 200 | Pending dashboard export | Pending release |
-| `https://sarj.ist/sehir/ankara/` | Pending targeted live check | Pending dashboard export | Pending release |
-| `https://sarj.ist/sehir/izmir/` | Pending targeted live check | Pending dashboard export | Pending release |
-| `https://sarj.ist/sehir/bursa/` | Pending targeted live check | Pending dashboard export | Pending release |
-| `https://sarj.ist/sehir/antalya/` | Pending targeted live check | Pending dashboard export | Pending release |
+| `https://sarj.ist/sehir/` | 200 | Pending dashboard export | Live fetch passed; indexing pending |
+| `https://sarj.ist/sehir/istanbul/` | 200 | Pending dashboard export | Live fetch passed; indexing pending |
+| `https://sarj.ist/sehir/ankara/` | 200 | Pending dashboard export | Live fetch passed; indexing pending |
+| `https://sarj.ist/sehir/izmir/` | 200 | Pending dashboard export | Live fetch passed; indexing pending |
+| `https://sarj.ist/sehir/bursa/` | 200 | Pending dashboard export | Live fetch passed; indexing pending |
+| `https://sarj.ist/sehir/antalya/` | 200 | Pending dashboard export | Live fetch passed; indexing pending |
 
-Deployment timestamp: pending. Review at deployment +7, +14 and +28 days; assign calendar dates only once released. At each checkpoint record first/last crawl, guide indexing, sampled station status, impressions and relevant queries with comparable date ranges and filters. Allow reporting lag; reassess unchanged results without automatically deleting pages or resubmitting in bulk. No automation was scheduled.
+Deployment timestamp: 12 October 2026, 13:38:08 Europe/Istanbul. Review on **19 October**, **26 October** and **9 November 2026** (deployment +7, +14 and +28 days). At each checkpoint record first/last crawl, guide indexing, sampled station status, impressions and relevant queries with comparable date ranges and filters. Allow reporting lag; reassess unchanged results without automatically deleting pages or resubmitting in bulk. No automation was scheduled.
