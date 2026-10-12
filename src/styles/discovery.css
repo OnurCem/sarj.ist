@@ -179,3 +179,20 @@ body:has(#station-detail[aria-modal="true"]) { overflow: hidden; }
 
 /* Location feedback stays beside the map action, outside the filter grid. */
 .workspace .location-status { top: 0; right: 56px; left: auto; width: 260px; max-width: calc(100vw - 90px); }
+
+/* Crawlable guides and coverage follow the map without covering its controls. */
+.workspace { height: auto; grid-template-rows: minmax(420px, calc(100dvh - 240px)) auto; }
+.discovery-guides { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px 30px; border-top: 1px solid var(--line); }
+.discovery-guides h2 { font-size: 20px; margin-bottom: 8px; }
+.discovery-guides nav { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.discovery-guides a { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); text-underline-offset: 4px; }
+.discovery-coverage, .dataset-note, .guide-intro { font-size: 14px; line-height: 1.7; color: var(--muted); overflow-wrap: anywhere; }
+.discovery-coverage p + p { margin-top: 8px; }
+.guide-intro { margin: 16px 0; }
+.dataset-note { margin: 24px 0; }
+.station-page .guide-section p + p { margin-top: 12px; }
+@media (max-width: 900px) {
+  .workspace { grid-template-rows: none; grid-template-areas: 'search' 'map' 'guides' 'heading' 'list'; }
+  .discovery-guides { grid-area: guides; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 20px 16px; }
+  .workspace.map-mode .discovery-guides { display: none; }
+}

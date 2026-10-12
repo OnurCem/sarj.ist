@@ -20,10 +20,10 @@ export function datasetPresentation(meta = {}) {
   return {
     isSample,
     badge: 'EPDK verisi',
-    summary: `Kaynak: EPDK · Son güncelleme: ${refreshedAt} · Anlık müsaitlik gösterilmez.`,
-    about: `İstasyon bilgileri Enerji Piyasası Düzenleme Kurumu (EPDK) verilerinden hazırlanır. Son güncelleme: ${refreshedAt}. Kayıtlar anlık müsaitlik, fiyat veya çalışma durumu içermez.`,
+    summary: `Kaynak: EPDK · Veri seti güncellemesi: ${refreshedAt} · Anlık müsaitlik gösterilmez.`,
+    about: `İstasyon bilgileri Enerji Piyasası Düzenleme Kurumu (EPDK) verilerinden hazırlanır. Veri seti güncellemesi: ${refreshedAt}. Kayıtlar anlık müsaitlik, fiyat veya çalışma durumu içermez.`,
     warningTitle: 'Kaynak: EPDK',
-    warningText: `İstasyon bilgileri ${refreshedAt} tarihinde güncellenen EPDK verilerinden hazırlanmıştır. Anlık müsaitlik, fiyat ve çalışma durumu gösterilmez.`,
+    warningText: `Veri seti güncellemesi: ${refreshedAt}. İstasyon bilgileri EPDK verilerinden hazırlanmıştır. Anlık müsaitlik, fiyat ve çalışma durumu gösterilmez.`,
   };
 }
 

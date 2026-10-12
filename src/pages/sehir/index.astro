@@ -18,6 +18,7 @@ const cities = [...Map.groupBy(stations, ({ citySlug }) => citySlug).entries()]
       <h1>Şehrini seç.</h1>
       <p>{cities.length} şehirde {stations.length} {dataView.isSample ? 'örnek istasyon' : 'istasyon'} listeleniyor.</p>
     </header>
+    <p class="guide-intro">Şehir rehberinden ilçeleri seçerek istasyon listelerine ulaşabilir, operatör, kayıtlı güç ve erişim bilgilerini karşılaştırabilirsin.</p>
     <div class="city-grid">
       {cities.map((city) => (
         <article class="city-card">
@@ -29,6 +30,7 @@ const cities = [...Map.groupBy(stations, ({ citySlug }) => citySlug).entries()]
         </article>
       ))}
     </div>
+    <p class="dataset-note">{dataView.about}</p>
     {dataView.isSample && <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>}
   </main>
 </BaseLayout>

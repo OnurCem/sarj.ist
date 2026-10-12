@@ -29,7 +29,7 @@ const dataView = datasetPresentation(dataset);
         <div>
           <p class="page-kicker">{station.operator} · {station.access}</p>
           <h1>{station.name}</h1>
-          <p>{station.area}, {station.city}</p>
+          <p>{group.name}, {station.city}</p>
         </div>
       </div>
       <dl class="station-facts">
@@ -38,6 +38,14 @@ const dataView = datasetPresentation(dataset);
         <div><dt>Soket sayısı</dt><dd>{station.sockets} soket</dd></div>
         <div><dt>Erişim</dt><dd>{station.access}</dd></div>
       </dl>
+      <section class="guide-section" aria-labelledby="station-location-title">
+        <h2 id="station-location-title">Konum ve erişim</h2>
+        <p><strong>Kayıtlı konum bilgisi:</strong> {station.area}. Bu alan tam sokak adresi içermeyebilir; haritadaki kayıtlı koordinatı da incele.</p>
+        <p>{station.access === 'Özel erişim'
+          ? 'Bu istasyon özel erişimli olarak kayıtlıdır. Kullanım için izin veya tesis koşulları gerekebilir; yola çıkmadan önce operatör ya da tesisle erişim koşullarını teyit et.'
+          : 'Bu istasyon halka açık olarak kayıtlıdır. Çalışma saatleri ve tesisin giriş koşulları bu veri setinde bulunmaz; yola çıkmadan önce operatör ya da tesisle teyit et.'}</p>
+      </section>
+      <p class="dataset-note">{dataView.about} Tarih, veri setinin yenilenmesini belirtir; bu istasyonun ayrı olarak doğrulandığı tarih değildir.</p>
       {dataView.isSample && <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>}
       <div class="page-actions">
         {!dataView.isSample && <a class="primary page-action" id="station-location-link" href={stationLocationUrl(station)} data-lat={station.lat} data-lng={station.lng} target="_blank" rel="noopener noreferrer">Konumu aç</a>}
