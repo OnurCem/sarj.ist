@@ -1,14 +1,10 @@
 ---
 import CustomSelect from '../components/CustomSelect.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { dataset, stations } from '../data/stations';
+import { dataset } from '../data/stations';
 import { datasetPresentation } from '../lib/station-presentation.mjs';
 
 const dataView = datasetPresentation(dataset);
-const cities = new Map(stations.map(({ citySlug, city }) => [citySlug, city]));
-const priorityCities = ['istanbul', 'ankara', 'izmir', 'bursa', 'antalya']
-  .filter((slug) => cities.has(slug))
-  .map((slug) => ({ slug, name: cities.get(slug) }));
 ---
 <BaseLayout title="Türkiye Şarj İstasyonları Haritası | şarj.ist" description="Türkiye şarj istasyonlarını şehir, ilçe, operatör, AC/DC ve kayıtlı güç bilgileriyle bul. İstasyonları haritada keşfet ve erişim bilgilerini incele." canonicalPath="/">
     <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -65,19 +61,6 @@ const priorityCities = ['istanbul', 'ankara', 'izmir', 'bursa', 'antalya']
         <div id="map-error" class="map-error" hidden>Harita yüklenemedi. İstasyonları listeden inceleyebilirsin.</div>
       </section>
       <button id="mobile-toggle" class="mobile-toggle"><svg><use href="#pin"/></svg><span>Listeye dön</span></button>
-      <section class="discovery-guides" aria-labelledby="discovery-guides-title">
-        <div>
-          <h2 id="discovery-guides-title">Şehir şarj rehberleri</h2>
-          <nav aria-label="Şehir şarj rehberleri">
-            {priorityCities.map(({ slug, name }) => <a href={`/sehir/${slug}/`}>{name} şarj istasyonları</a>)}
-            <a href="/sehir/">Tüm şehirleri incele →</a>
-          </nav>
-        </div>
-        <div class="discovery-coverage">
-          <p>{cities.size} şehirde {stations.length.toLocaleString('tr-TR')} {dataView.isSample ? 'örnek istasyon' : 'istasyon kaydı'}. Şehir, ilçe, istasyon adı veya operatörle ara; AC/DC ve erişim filtreleriyle seçenekleri daralt.</p>
-          <p>{dataView.about}</p>
-        </div>
-      </section>
     </main>
     <dialog id="about-dialog"><button class="dialog-close" aria-label="Kapat"><svg><use href="#close"/></svg></button><div class="dialog-brand" aria-label="şarj.ist"><span class="dialog-brand-mark" aria-hidden="true"></span><span>şarj<span class="brand-light">.ist</span></span></div><h2>Şarj istasyonları,<br/>tek haritada.</h2><p>İstasyonları haritada keşfet, AC veya DC şarj türüne göre filtrele ve bir istasyon seçerek detaylarını gör.</p><p id="about-data-copy">{dataView.about}</p><nav class="help-links" aria-label="Yardım bağlantıları"><a href="/sehir/">Şehir rehberleri</a><a href="/privacy/">Gizlilik</a><a href="/licenses/">Lisanslar</a></nav><button class="primary dialog-done">Keşfetmeye başla <svg><use href="#arrow"/></svg></button></dialog>
     <script src="../scripts/map.js"></script>

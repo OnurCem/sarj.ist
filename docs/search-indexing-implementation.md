@@ -4,8 +4,8 @@ Recorded 12 October 2026 (Europe/Istanbul). Code deployed and verified; dashboar
 
 ## Changes
 
-- Homepage links directly to Istanbul, Ankara, Izmir, Bursa and Antalya guides when those cities exist in the active dataset, plus the complete city directory. Links are ordinary anchors in initial HTML, with a compact section following the map and preceding mobile results.
-- Homepage explains coverage, available filters, dataset source/refresh and lack of live availability. No popularity claims are made.
+- Homepage design restored at the user’s request: no added priority-city links, coverage panel or reduced map height. The original city-directory menu link remains. Priority cities are reachable through that directory. The plan’s prominent homepage city-link section was explicitly superseded by this design decision.
+- The existing homepage information dialog retains source/refresh information and the lack-of-live-availability explanation. Detailed source and access improvements remain on guide and station pages.
 - Station pages expose recorded location text, public/private access caveats and shared dataset attribution. Refresh dates describe the dataset, not individual station verification.
 - Directory, city and district guides explain how to choose a station and display shared source/refresh information. Existing counts, sample warnings, directions and alternatives remain.
 - No station removal, noindex rule, inferred connector/price/hours, pipeline change or alias change was warranted by the available evidence.
@@ -83,3 +83,7 @@ For 1104, inspect private R2 history/reconciliation state or retained historical
 | `https://sarj.ist/sehir/antalya/` | 200 | Pending dashboard export | Live fetch passed; indexing pending |
 
 Deployment timestamp: 12 October 2026, 13:38:08 Europe/Istanbul. Review on **19 October**, **26 October** and **9 November 2026** (deployment +7, +14 and +28 days). At each checkpoint record first/last crawl, guide indexing, sampled station status, impressions and relevant queries with comparable date ranges and filters. Allow reporting lag; reassess unchanged results without automatically deleting pages or resubmitting in bulk. No automation was scheduled.
+
+## Homepage design correction — 12 October 2026
+
+The user explicitly requested that priority-city links not appear on the homepage. Removed the entire new homepage section and its layout overrides, restoring the original map/sidebar dimensions and mobile flow. Kept the original header city-directory link and the station/guide information improvements. The initial release’s homepage screenshots and five-direct-link checks above describe that first release, not the corrected homepage. Follow-up release verification pending.
