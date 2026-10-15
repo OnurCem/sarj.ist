@@ -87,3 +87,20 @@ Deployment timestamp: 12 October 2026, 13:38:08 Europe/Istanbul. Review on **19 
 ## Homepage design correction — 12 October 2026
 
 The user explicitly requested that priority-city links not appear on the homepage. Removed the entire new homepage section and its layout overrides, restoring the original map/sidebar dimensions and mobile flow. Kept the original header city-directory link and the station/guide information improvements. The initial release’s homepage screenshots and five-direct-link checks above describe that first release, not the corrected homepage. Follow-up [release 38240919119](https://github.com/OnurCem/sarj.ist/actions/runs/38240919119) succeeded with code commit `be1d3e86ea6aaac6f4579d9839cb5b844bdd92b9`. Live verification at 14:13:25 Europe/Istanbul confirmed no added priority-city links or panel, the original directory menu link, working CSS/JS, retained guide/station information and the preserved Trendlife 404. Production still contains 16,990 records with the same refresh timestamp. Desktop (1440×900) and mobile (390×900) browser checks passed with no application errors or overflow; keyboard directory navigation and mobile map expansion/return work. Original desktop map height is restored to 836 px at a 900 px viewport.
+
+## Dashboard evidence received — 12 October 2026
+
+See [dashboard evidence review](search-indexing-dashboard-review.md) for the supplied exports, six screenshots and three firewall events. The newer per-URL inspections confirm Zorlu Center and Koç Holding indexed after 10 October crawls, preceding this implementation. The 9 October overview reports 194 indexed, 17,776 discovered/not-indexed, 24 crawled/not-indexed and one 404; it cannot measure today's release. Directory and Istanbul inspections report URL unknown to Google; their live-test results and sitemap processing details remain pending. The firewall export contains no request identifying as Googlebot or Google-InspectionTool and supplies no confirmed Google block warranting a rule change. No additional application or Cloudflare change was made.
+
+The follow-up screenshots confirm successful Google live fetches for `/sehir/` (15:07:43) and `/sehir/istanbul/` (15:09:38) on 12 October, plus sitemap status Success, last read 10 October and 18,008 discovered pages. Both guide canonicals match. No indexing requests have yet been made, per the user. Recommend one request for each guide now; optional further requests are conditional on individual inspection and live-test results. See the dashboard review for details.
+
+## Search Console check — 16 October 2026
+
+Read directly in Search Console (domain property `sarj.ist`). Indexing report last updated 12 October.
+
+- **239 indexed** (194 on 9 October); 17,764 discovered/not indexed (validation started); 7 crawled/not indexed (24 before; validation failed 13 October); two 404s.
+- Crawled/not-indexed examples: six station pages (Vadi Çanakkale 17706, Rize Ticaret Borsası 5808, Metro Market Mamak 2416, Akbaşlar Tarım Konya 10574, İstanbul Atlaspark AVM 10723, Köstem Zeytinyağı Müzesi 8710) plus historical `http://sarj.ist/`.
+- 404s: Trendlife 1104 and Mer-Can Korupark Restoran 4216. Neither ID is in the current dataset, so the 404 is correct; do not validate.
+- URL Inspection: `/sehir/`, `/sehir/istanbul/` and `/sehir/ankara/` are now **indexed**.
+- Sitemap: `/sitemap.xml` last read 15 October (18,020 → 17,988 discovered), before the split into a sitemap index on 16 October (commit `f4a081a`).
+- Performance, last 3 months: 2 clicks, 18 impressions, average position 16.9. New query: “ankara elektrikli araç şarj istasyonları” (position 98).
