@@ -86,3 +86,15 @@ test('canonical monitor checks GET/HEAD, path/query preservation and missing-pag
 test('canonical monitor keeps workers.dev independent of custom domain redirects', async () => {
   assert.deepEqual(await checkCanonicalRedirects('https://example.workers.dev', () => { throw new Error('must not request canonical redirects'); }), { checked: false });
 });
+
+test('split sitemaps list every guide once and each station in exactly one access sitemap', async () => {
+  const { SITEMAP_NAMES, sitemapPaths, sitemapIndexXml } = await import('../src/lib/sitemaps.mjs');
+  const source = [station(1), station(2, 'Şile', { access: 'Özel erişim' }), station(3, 'Kadıköy', { city: 'İzmir', citySlug: 'izmir' })];
+  const groups = buildDistrictGroups(source);
+  const all = SITEMAP_NAMES.flatMap((name) => sitemapPaths(name, source, groups));
+  assert.equal(new Set(all).size, all.length);
+  assert.deepEqual(sitemapPaths('stations-public', source, groups), ['/istasyon/station-1/', '/istasyon/station-3/']);
+  assert.deepEqual(sitemapPaths('stations-private', source, groups), ['/istasyon/station-2/']);
+  assert.ok(sitemapPaths('guides', source, groups).includes('/sehir/izmir/'));
+  assert.equal(sitemapIndexXml(new URL('https://sarj.ist')).match(/<loc>/g).length, SITEMAP_NAMES.length);
+});
