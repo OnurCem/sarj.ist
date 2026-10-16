@@ -1,10 +1,12 @@
 import { guidePages } from './station-guides.mjs';
+import { buildOperatorGroups, operatorPaths } from './operator-guides.mjs';
 
 // Separate sitemaps let Search Console report indexing per page type.
-export const SITEMAP_NAMES = ['guides', 'stations-public', 'stations-private'];
+export const SITEMAP_NAMES = ['guides', 'operators', 'stations-public', 'stations-private'];
 
 export function sitemapPaths(name, stations, districtGroups) {
   if (name === 'guides') return ['/', '/sehir/', '/privacy/', '/licenses/', ...new Set(stations.map(({ citySlug }) => `/sehir/${citySlug}/`)), ...guidePages(districtGroups).map(({ path }) => path)];
+  if (name === 'operators') return operatorPaths(buildOperatorGroups(stations));
   const access = { 'stations-public': 'Halka açık', 'stations-private': 'Özel erişim' }[name];
   if (!access) throw new Error(`Unknown sitemap: ${name}`);
   return stations.filter((station) => station.access === access).map(({ slug }) => `/istasyon/${slug}/`);

@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import GuideSummary from '../../components/GuideSummary.astro';
+import StationList from '../../components/StationList.astro';
+import { dataset, operatorGroups } from '../../data/stations';
+import { datasetPresentation } from '../../lib/station-presentation.mjs';
+import { operatorCityPath, operatorPath } from '../../lib/operator-guides.mjs';
+
+export function getStaticPaths() {
+  return operatorGroups.map((operator) => ({ params: { operator: operator.slug }, props: { operator } }));
+}
+const { operator } = Astro.props;
+const dataView = datasetPresentation(dataset);
+const count = operator.stations.length;
+const strongest = [...operator.stations].sort((a, b) => b.power - a.power || a.name.localeCompare(b.name, 'tr')).slice(0, 12);
+const breadcrumbs = [{ name: 'şarj.ist', path: '/' }, { name: 'Operatörler', path: '/operator/' }, { name: operator.name, path: operatorPath(operator.slug) }];
+const topCities = operator.cities.slice(0, 3).map(({ name }) => name).join(', ');
+---
+<BaseLayout title={`${operator.name} şarj istasyonları — ${count} istasyon | şarj.ist`} description={`${operator.name} elektrikli araç şarj istasyonları: ${operator.cities.length} şehirde ${count} kayıtlı istasyon${topCities ? ` (${topCities} ve diğerleri)` : ''}. AC/DC, kayıtlı güç ve erişim bilgileri.`} canonicalPath={operatorPath(operator.slug)} breadcrumbs={breadcrumbs}>
+  <SiteHeader />
+  <main class="content-page city-page">
+    <Breadcrumbs items={breadcrumbs} />
+    <a class="back-link" href="/operator/">← Tüm operatörler</a>
+    <header class="city-heading"><p class="page-kicker">Operatör rehberi</p><h1>{operator.name} şarj istasyonları</h1><p>{count} {dataView.isSample ? 'örnek istasyon' : 'istasyon'} · {operator.cities.length} şehir · Anlık müsaitlik gösterilmez.</p></header>
+    <p class="guide-intro">{operator.name} operatörüne kayıtlı şarj istasyonlarını şehre göre seç; şarj türü, kayıtlı güç ve halka açık ya da özel erişim bilgisini karşılaştır. Fiyat, çalışma saati ve anlık müsaitlik bu kayıtlarda bulunmaz; yola çıkmadan önce operatörle teyit et.</p>
+    {operator.variants.length > 1 && <p class="guide-intro">Kayıtlarda bu operatör farklı yazımlarla geçer ({operator.variants.join(', ')}); bu sayfada birlikte listelenir.</p>}
+    <GuideSummary stations={operator.stations} showOperators={false} />
+    <section class="guide-section"><h2>Şehirlere göre {operator.name} istasyonları</h2>
+      <div class="district-grid">{operator.cities.map((city) => <a class="district-link" href={city.hasPage ? operatorCityPath(operator.slug, city.slug) : `/sehir/${city.slug}/`}><strong>{city.name}</strong><span>{city.stations.length} istasyon{city.hasPage ? '' : ' · şehir rehberi'} →</span></a>)}</div>
+    </section>
+    <section class="guide-section"><h2>En yüksek kayıtlı güce sahip istasyonlar</h2><p>Kayıtlı güç, istasyon kaydındaki güç özetidir; araçta alınan gerçek şarj hızını göstermez.</p><StationList stations={strongest} /></section>
+    <p class="dataset-note">{dataView.about}</p>
+    {dataView.isSample && <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>}
+  </main>
+</BaseLayout>

@@ -28,3 +28,7 @@ export const districtGroups = buildDistrictGroups(stations);
 const districtsByStation = new Map(districtGroups.flatMap((group) => group.stations.map((station) => [station.id, group])));
 export const stationDistrict = (station: Station) => districtsByStation.get(station.id);
 export const nearbyStations = buildNearbyIndex(stations);
+
+import { buildOperatorGroups, operatorLinker } from '../lib/operator-guides.mjs';
+export const operatorGroups = buildOperatorGroups(stations);
+export const operatorLink = operatorLinker(operatorGroups);

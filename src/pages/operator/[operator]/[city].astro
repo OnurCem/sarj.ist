@@ -1,0 +1,43 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SiteHeader from '../../../components/SiteHeader.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import GuideSummary from '../../../components/GuideSummary.astro';
+import StationList from '../../../components/StationList.astro';
+import { dataset, operatorGroups, stationDistrict } from '../../../data/stations';
+import { datasetPresentation, mapHref } from '../../../lib/station-presentation.mjs';
+import { districtPath } from '../../../lib/station-guides.mjs';
+import { operatorCityPages, operatorCityPath, operatorPath } from '../../../lib/operator-guides.mjs';
+
+export function getStaticPaths() {
+  return operatorCityPages(operatorGroups).map(({ operator, city }) => ({ params: { operator: operator.slug, city: city.slug }, props: { operator, city } }));
+}
+const { operator, city } = Astro.props;
+const dataView = datasetPresentation(dataset);
+const count = city.stations.length;
+const districts = [...Map.groupBy(city.stations, (station) => stationDistrict(station)).entries()]
+  .map(([group, stations]) => ({ group, count: stations.length }))
+  .sort((a, b) => b.count - a.count || a.group.name.localeCompare(b.group.name, 'tr'));
+const path = operatorCityPath(operator.slug, city.slug);
+const breadcrumbs = [{ name: 'şarj.ist', path: '/' }, { name: 'Operatörler', path: '/operator/' }, { name: operator.name, path: operatorPath(operator.slug) }, { name: city.name, path }];
+---
+<BaseLayout title={`${operator.name} ${city.name} şarj istasyonları — ${count} istasyon | şarj.ist`} description={`${city.name} genelinde ${operator.name} operatörüne kayıtlı ${count} şarj istasyonu, ${districts.length} ilçede. AC/DC, kayıtlı güç, soket ve erişim bilgileri.`} canonicalPath={path} breadcrumbs={breadcrumbs}>
+  <SiteHeader />
+  <main class="content-page city-page">
+    <Breadcrumbs items={breadcrumbs} />
+    <a class="back-link" href={mapHref(city.slug)}>← {city.name} haritasına dön</a>
+    <header class="city-heading"><p class="page-kicker">{operator.name} · {city.name}</p><h1>{operator.name} {city.name} şarj istasyonları</h1><p>{count} {dataView.isSample ? 'örnek istasyon' : 'istasyon'} · {districts.length} ilçe · Anlık müsaitlik gösterilmez.</p></header>
+    <p class="guide-intro">{city.name} içindeki {operator.name} istasyonlarını ilçeye göre incele; şarj türü, kayıtlı güç ve erişim bilgisini karşılaştır. Fiyat, çalışma saati ve anlık müsaitlik bu kayıtlarda bulunmaz; yola çıkmadan önce operatörle teyit et.</p>
+    <GuideSummary stations={city.stations} showOperators={false} />
+    <section class="guide-section"><h2>İlçelere göre {operator.name} istasyonları</h2><p>İlçe rehberleri, aynı ilçedeki diğer operatörlerin istasyonlarını da listeler.</p>
+      <div class="district-grid">{districts.map(({ group, count }) => <a class="district-link" href={districtPath(group)}><strong>{group.name}</strong><span>{count} {operator.name} istasyonu →</span></a>)}</div>
+    </section>
+    <section class="guide-section"><h2>{city.name} {operator.name} istasyon listesi</h2><StationList stations={city.stations} /></section>
+    <nav class="guide-pagination" aria-label="İlgili rehberler">
+      <a href={operatorPath(operator.slug)}>Türkiye genelindeki {operator.name} istasyonları</a>
+      <a href={`/sehir/${city.slug}/`}>{city.name} şehir rehberi →</a>
+    </nav>
+    <p class="dataset-note">{dataView.about}</p>
+    {dataView.isSample && <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>}
+  </main>
+</BaseLayout>

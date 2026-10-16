@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { dataset, operatorGroups } from '../../data/stations';
+import { datasetPresentation } from '../../lib/station-presentation.mjs';
+import { MIN_OPERATOR_STATIONS, operatorPath } from '../../lib/operator-guides.mjs';
+
+const dataView = datasetPresentation(dataset);
+const operators = [...operatorGroups].sort((a, b) => b.stations.length - a.stations.length || a.name.localeCompare(b.name, 'tr'));
+const breadcrumbs = [{ name: 'şarj.ist', path: '/' }, { name: 'Operatörler', path: '/operator/' }];
+---
+<BaseLayout title="Şarj operatörleri ve istasyonları | şarj.ist" description="Türkiye'deki elektrikli araç şarj operatörlerini istasyon sayısına göre incele; her operatörün istasyonlarını şehir ve ilçeye göre bul." canonicalPath="/operator/" breadcrumbs={breadcrumbs}>
+  <SiteHeader />
+  <main class="content-page city-page">
+    <Breadcrumbs items={breadcrumbs} />
+    <header class="city-heading"><p class="page-kicker">Operatör rehberi</p><h1>Şarj operatörleri</h1><p>{operators.length} operatör · {dataView.isSample ? 'örnek veriler' : 'EPDK kayıtları'} · Anlık müsaitlik gösterilmez.</p></header>
+    <p class="guide-intro">Bir operatör seçerek kayıtlı istasyonlarını şehirlere göre incele. Listede en az {MIN_OPERATOR_STATIONS} kayıtlı istasyonu bulunan operatörler yer alır; daha küçük operatörlerin istasyonlarına şehir rehberinden ulaşabilirsin.</p>
+    <section class="guide-section"><h2>İstasyon sayısına göre operatörler</h2>
+      <div class="district-grid">{operators.map((operator) => <a class="district-link" href={operatorPath(operator.slug)}><strong>{operator.name}</strong><span>{operator.stations.length} istasyon · {operator.cities.length} şehir →</span></a>)}</div>
+    </section>
+    <p class="dataset-note">{dataView.about}</p>
+    {dataView.isSample && <div class="sample-warning"><strong>{dataView.warningTitle}</strong><p>{dataView.warningText}</p></div>}
+  </main>
+</BaseLayout>

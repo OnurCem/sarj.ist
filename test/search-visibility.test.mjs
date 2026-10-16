@@ -98,3 +98,31 @@ test('split sitemaps list every guide once and each station in exactly one acces
   assert.ok(sitemapPaths('guides', source, groups).includes('/sehir/izmir/'));
   assert.equal(sitemapIndexXml(new URL('https://sarj.ist')).match(/<loc>/g).length, SITEMAP_NAMES.length);
 });
+
+test('operator guides merge spelling variants and only create city pages above the threshold', async () => {
+  const { buildOperatorGroups, operatorCityPages, operatorLinker, operatorPaths, operatorsIn } = await import('../src/lib/operator-guides.mjs');
+  const source = [
+    ...Array.from({ length: 4 }, (_, id) => station(`e${id}`, 'Kadıköy', { operator: 'ecojet' })),
+    station('e4', 'Şile', { operator: 'Ecojet', city: 'İzmir', citySlug: 'izmir' }),
+    ...Array.from({ length: 3 }, (_, id) => station(`s${id}`, 'Kadıköy', { operator: 'Small' })),
+  ];
+  const groups = buildOperatorGroups(source, { minStations: 5, minCityStations: 4 });
+  assert.deepEqual(groups.map(({ slug, name, variants }) => ({ slug, name, variants })), [{ slug: 'ecojet', name: 'ecojet', variants: ['ecojet', 'Ecojet'] }]);
+  assert.deepEqual(groups[0].cities.map(({ slug, hasPage }) => [slug, hasPage]), [['istanbul', true], ['izmir', false]]);
+  assert.deepEqual(operatorCityPages(groups).map(({ path }) => path), ['/operator/ecojet/istanbul/']);
+  assert.deepEqual(operatorPaths(groups), ['/operator/', '/operator/ecojet/', '/operator/ecojet/istanbul/']);
+  const link = operatorLinker(groups);
+  assert.equal(link('Ecojet', 'istanbul').path, '/operator/ecojet/istanbul/');
+  assert.equal(link('ECOJET', 'izmir').path, '/operator/ecojet/');
+  assert.equal(link('Small', 'istanbul'), undefined);
+  assert.deepEqual(operatorsIn(source, link, 'istanbul').map(({ name, path, count }) => [name, path, count]), [['ecojet', '/operator/ecojet/istanbul/', 5], ['Small', undefined, 3]]);
+});
+
+test('operators sitemap lists operator guides without overlapping other sitemaps', async () => {
+  const { SITEMAP_NAMES, sitemapPaths } = await import('../src/lib/sitemaps.mjs');
+  const source = Array.from({ length: 12 }, (_, id) => station(id, 'Kadıköy', { operator: 'Trugo' }));
+  const groups = buildDistrictGroups(source);
+  assert.deepEqual(sitemapPaths('operators', source, groups), ['/operator/', '/operator/trugo/', '/operator/trugo/istanbul/']);
+  const all = SITEMAP_NAMES.flatMap((name) => sitemapPaths(name, source, groups));
+  assert.equal(new Set(all).size, all.length);
+});

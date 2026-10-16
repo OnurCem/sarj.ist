@@ -104,3 +104,5 @@ dialog{border:1px solid #eee2e8;border-radius:22px;padding:34px;max-width:460px;
   .sidebar{padding-bottom:82px}
   .station-list{padding-bottom:16px}
 }
+.operator-links a{color:var(--accent);text-underline-offset:3px}
+.page-kicker a{color:inherit;text-underline-offset:3px}

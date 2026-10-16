@@ -28,7 +28,7 @@ const mapUrl = `/?sehir=${encodeURIComponent(group.citySlug)}&ilce=${encodeURICo
     <a class="back-link" href={mapUrl}>← İlçe haritasını aç</a>
     <header class="city-heading"><h1>{group.name}, {group.city} şarj istasyonları{suffix}</h1><p>{group.stations.length} {dataView.isSample ? 'örnek istasyon' : 'istasyon'} · Sayfa {page} / {group.pageCount} · Anlık müsaitlik gösterilmez.</p></header>
     <p class="guide-intro">Aşağıdaki istasyonların operatör, AC/DC türü, kayıtlı güç ve erişim bilgilerini karşılaştır. İstasyon sayfasında kayıtlı konumu ve yakındaki alternatifleri incele; özel erişimli noktaların kullanım koşullarını önceden teyit et.</p>
-    <GuideSummary stations={group.stations} />
+    <GuideSummary stations={group.stations} citySlug={group.citySlug} />
     <section class="guide-section"><h2>İstasyon listesi</h2><StationList stations={stations} /></section>
     <nav class="guide-pagination" aria-label="İstasyon listesi sayfaları">
       {page > 1 && <a rel="prev" href={districtPath(group, page - 1)}>← Önceki sayfa</a>}

@@ -25,7 +25,7 @@ const breadcrumbs = [{ name: 'şarj.ist', path: '/' }, { name: 'Şehir rehberi',
     <a class="back-link" href={mapHref(citySlug)}>← {city} haritasına dön</a>
     <header class="city-heading"><h1>{city} şarj istasyonları</h1><p>{cityStations.length} {dataView.isSample ? 'örnek istasyon' : 'istasyon'} · {groups.length} ilçe grubu · Anlık müsaitlik gösterilmez.</p></header>
     <p class="guide-intro">Gideceğin bölgeye göre aşağıdan bir ilçe seç. İlçe listesindeki istasyonları şarj türü, kayıtlı güç ve halka açık ya da özel erişim bilgisine göre karşılaştır; konum bağlantısıyla yolculuğunu planla.</p>
-    <GuideSummary stations={cityStations} />
+    <GuideSummary stations={cityStations} citySlug={citySlug} />
     <section class="guide-section"><h2>İlçeye göre şarj istasyonları</h2>
       <div class="district-grid">{groups.map((group) => <a class="district-link" href={districtPath(group)}><strong>{group.name}</strong><span>{group.stations.length} istasyon →</span></a>)}</div>
     </section>

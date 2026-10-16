@@ -1,6 +1,10 @@
 ---
 import { guideSummary } from '../lib/station-guides.mjs';
-const summary = guideSummary(Astro.props.stations);
+import { operatorsIn } from '../lib/operator-guides.mjs';
+import { operatorLink } from '../data/stations';
+const { stations, citySlug, showOperators = true } = Astro.props;
+const summary = guideSummary(stations);
+const operators = operatorsIn(stations, operatorLink, citySlug);
 ---
 <section class="guide-summary" aria-label="İstasyon özeti">
   <dl class="station-facts">
@@ -10,5 +14,5 @@ const summary = guideSummary(Astro.props.stations);
     <div><dt>DC olarak sınıflandırılan</dt><dd>{summary.dc} istasyon</dd></div>
   </dl>
   <p>Kayıtlı istasyon güçleri {summary.minPower}–{summary.maxPower} kW aralığında. Sayılar istasyon kayıtlarını ölçer; her kayıtta tek şarj türü ve güç özeti bulunur. Soket türlerinin dağılımını veya aynı istasyonda AC ve DC birlikte bulunduğunu göstermez.</p>
-  <details><summary>{summary.operators.length} operatörü incele</summary><p>{summary.operators.join(' · ')}</p></details>
+  {showOperators && <details><summary>{operators.length} operatörü incele</summary><p class="operator-links">{operators.map((operator, index) => <>{index > 0 && ' · '}{operator.path ? <a href={operator.path}>{operator.name}</a> : operator.name} <small>({operator.count})</small></>)}</p></details>}
 </section>
